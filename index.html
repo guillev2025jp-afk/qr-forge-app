@@ -3,448 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR AI-ON - Generador Profesional</title>
-    
+    <meta name="theme-color" content="#007bff">
+    <title>QR AI-ON - Agencia & Mentoría</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-        body {
-            background: #f1f3f5;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .qr-container {
-            background: #ffffff;
-            border-radius: 32px;
-            max-width: 420px;
-            width: 100%;
-            padding: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
-            text-align: center;
-        }
-        /* Encabezado Corporativo */
-        .header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 6px;
-        }
-        .subtitle {
-            font-size: 14px;
-            color: #6b7280;
-        }
-        /* Pestañas de categorías */
-        .tabs-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .tab {
-            background: #f1f3f5;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #495057;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s;
-        }
-        .tab.active {
-            background: #111827;
-            color: #ffffff;
-        }
-        /* Campos de Entrada */
-        .input-container {
-            margin-bottom: 12px;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1px solid #dee2e6;
-            border-radius: 14px;
-            font-size: 14px;
-            outline: none;
-            background: #f8f9fa;
-            color: #212529;
-            transition: all 0.2s;
-        }
-        input[type="text"]:focus {
-            border-color: #111827;
-            background: #ffffff;
-        }
-        /* Entrada interactiva dashed para Carta Menú */
-        .file-box {
-            display: none;
-            background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            border-radius: 14px;
-            padding: 18px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .file-box:hover {
-            background: #f1f3f5;
-            border-color: #007bff;
-        }
-        .file-box input {
-            display: none;
-        }
-        .file-label {
-            font-size: 14px;
-            color: #495057;
-            font-weight: 500;
-        }
-        /* Botón de Generar Principal Fijo */
-        .btn-generate {
-            width: 100%;
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-bottom: 20px;
-        }
-        .btn-generate:hover {
-            background: #0056b3;
-        }
-        /* Contenedor central de vista previa */
-        .preview-box {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 24px;
-            padding: 24px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 200px;
-            justify-content: center;
-        }
-        /* Datos informativos del QR */
-        .qr-info-display {
-            width: 100%;
-            background: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 12px;
-            padding: 10px;
-            margin-bottom: 16px;
-            font-size: 13px;
-            text-align: left;
-            display: none;
-        }
-        .qr-info-display div {
-            margin-bottom: 4px;
-            word-break: break-all;
-        }
-        #qrcode {
-            margin-bottom: 20px;
-            min-height: 160px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        /* Configuración nativa de la librería: aseguramos compatibilidad iOS/Android */
-        #qrcode img, #qrcode canvas {
-            display: block;
-            background: #ffffff;
-            padding: 12px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        /* Botones de acción inferiores */
-        .actions {
-            display: flex;
-            gap: 12px;
-            width: 100%;
-        }
-        .btn {
-            flex: 1;
-            padding: 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: all 0.2s;
-            border: none;
-        }
-        .btn-dark {
-            background: #111827;
-            color: #ffffff;
-        }
-        .btn-dark:hover {
-            background: #1f2937;
-        }
-        .btn-light {
-            background: #ffffff;
-            color: #111827;
-            border: 1px solid #dee2e6;
-        }
-        .btn-light:hover {
-            background: #f8f9fa;
-        }
-        /* Sección Historial */
-        .history-section {
-            border-top: 1px solid #e9ecef;
-            padding-top: 166px;
-            text-align: left;
-            margin-top: 16px;
-        }
-        .history-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 6px;
-        }
-        .history-status {
-            font-size: 13px;
-            color: #495057;
-            line-height: 1.4;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #f4f6f9; color: #333; padding: 20px; display: block; }
+        .container { max-width: 500px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .header { text-align: center; margin-bottom: 25px; }
+        .header h1 { color: #007bff; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+        .header p { color: #666; font-size: 14px; margin-top: 4px; font-weight: 500; }
+        .tabs { display: block; border-bottom: 2px solid #eee; margin-bottom: 20px; white-space: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab-btn { display: inline-block; padding: 10px 14px; background: none; border: none; font-size: 13px; font-weight: 600; color: #666; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .tab-btn.active { color: #007bff; border-bottom-color: #007bff; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; color: #444; }
+        input[type="text"], input[type="email"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; outline: none; transition: border 0.2s; }
+        input:focus { border-color: #007bff; }
+        .drop-zone { border: 2px dashed #007bff; border-radius: 8px; padding: 30px 10px; text-align: center; background: #f8faff; cursor: pointer; display: none; }
+        .drop-zone p { font-size: 13px; color: #555; font-weight: 500; }
+        .drop-zone span { display: block; font-size: 11px; color: #888; margin-top: 5px; }
+        .btn-main { width: 100%; background: #007bff; color: #fff; border: none; padding: 14px; border-radius: 6px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-bottom: 25px; }
+        .btn-main:hover { background: #0056b3; }
+        .preview-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; text-align: center; display: none; margin-bottom: 25px; }
+        .preview-info { font-size: 12px; color: #666; margin-bottom: 15px; word-break: break-all; max-height: 40px; overflow: hidden; text-overflow: ellipsis; }
+        .qr-wrapper { background: #fff; padding: 15px; display: inline-block; border-radius: 6px; border: 1px solid #dee2e6; margin-bottom: 15px; }
+        .qr-wrapper img { display: block; margin: 0 auto; }
+        .action-btns { display: block; text-align: center; }
+        .btn-action { display: block; width: 100%; padding: 11px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; margin-bottom: 8px; }
+        .btn-download { background: #111111; color: #fff; }
+        .btn-save { background: #e2e8f0; color: #333; }
+        .history-box { border-top: 1px solid #eee; padding-top: 20px; }
+        .history-box h3 { font-size: 14px; color: #222; margin-bottom: 12px; }
+        .history-list { list-style: none; max-height: 150px; overflow-y: auto; }
+        .history-item { display: block; padding: 8px; background: #f8f9fa; border-radius: 4px; margin-bottom: 6px; font-size: 12px; color: #444; text-decoration: none; border-left: 3px solid #007bff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
 
-    <div class="qr-container">
-        <div class="header">
-            <h1>QR AI-ON</h1>
-            <div class="subtitle">Agencia & Mentoría</div>
-        </div>
+<div class="container">
+    <div class="header">
+        <h1>QR AI-ON</h1>
+        <p>Agencia & Mentoría</p>
+    </div>
 
-        <div class="tabs-container">
-            <button class="tab active" onclick="changeType(this, 'URL', 'Ej: https://tu-sitio-web.com')">🔗 URL</button>
-            <button class="tab" onclick="changeType(this, 'WhatsApp', 'Ej: 5493547XXXXXX')">💬 WhatsApp</button>
-            <button class="tab" onclick="changeType(this, 'WiFi', 'Ej: NombreRed')">📶 WiFi</button>
-            <button class="tab" onclick="changeType(this, 'Texto', 'Escribí el texto aquí...')">📝 Texto</button>
-            <button class="tab" onclick="changeType(this, 'Email', 'Ej: mailto:contacto@correo.com')">✉️ Email</button>
-            <button class="tab" onclick="changeType(this, 'Carta Menu', '')">📋 Carta Menú</button>
-        </div>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('url')">🔗 URL</button>
+        <button class="tab-btn" onclick="switchTab('wa')">💬 WhatsApp</button>
+        <button class="tab-btn" onclick="switchTab('wifi')">📶 WiFi</button>
+        <button class="tab-btn" onclick="switchTab('text')">📝 Texto</button>
+        <button class="tab-btn" onclick="switchTab('email')">✉️ Email</button>
+        <button class="tab-btn" onclick="switchTab('menu')">📋 Carta Menú</button>
+    </div>
 
-        <div class="input-container" id="text-input-container">
-            <input type="text" id="qr-input" placeholder="Ej: https://tu-sitio-web.com" autocomplete="off">
-        </div>
-
-        <div class="file-box" id="file-input-container" onclick="document.getElementById('file-element').click()">
-            <span class="file-label" id="file-status-label">📁 Subir PDF o Imagen de la Carta</span>
-            <input type="file" id="file-element" accept="application/pdf, image/*" onchange="handleFileSelection(this)">
-        </div>
-
-        <button class="btn-generate" onclick="forceGenerateQR()">Generar Código QR</button>
-
-        <div class="preview-box">
-            
-            <div class="qr-info-display" id="info-display">
-                <div><strong>Tipo de QR:</strong> <span id="info-type">-</span></div>
-                <div><strong>Contenido/Enlace:</strong> <span id="info-data">-</span></div>
-            </div>
-
-            <div id="qrcode"></div>
-            
-            <div class="actions">
-                <button class="btn btn-dark" onclick="downloadPNG()">📸 Descargar PNG</button>
-                <button class="btn btn-light" onclick="saveQR()">💾 Guardar</button>
-            </div>
-        </div>
-
-        <div class="history-section">
-            <div class="history-title">📜 Historial de QR</div>
-            <div class="history-status" id="history-content">No hay QR guardados aún.</div>
+    <div class="input-group">
+        <label id="input-label">Ingresar URL del sitio</label>
+        <input type="text" id="main-input" placeholder="https://ejemplo.com">
+        <div id="file-zone" class="drop-zone" onclick="document.getElementById('file-input').click()">
+            <p>Seleccionar o arrastrar archivo de la Carta</p>
+            <span>Soporta imágenes o PDF (Máx. 500kb para optimización de QR)</span>
+            <input type="file" id="file-input" style="display:none" accept="image/*,application/pdf" onchange="handleFile(this)">
         </div>
     </div>
 
-    <script>
-        const qrcodeElement = document.getElementById("qrcode");
-        const qrInput = document.getElementById("qr-input");
-        const textContainer = document.getElementById("text-input-container");
-        const fileContainer = document.getElementById("file-input-container");
-        const fileElement = document.getElementById("file-element");
-        const fileStatusLabel = document.getElementById("file-status-label");
+    <button class="btn-main" onclick="generateQR()">Generar Código QR</button>
+
+    <div class="preview-box" id="preview-container">
+        <div class="preview-info" id="qr-meta"></div>
+        <div class="qr-wrapper" id="qrcode"></div>
+        <div class="action-btns">
+            <button class="btn-action btn-download" onclick="downloadPNG()">📸 Descargar PNG</button>
+            <button class="btn-action btn-save" onclick="saveToHistory()">💾 Guardar</button>
+        </div>
+    </div>
+
+    <div class="history-box">
+        <h3>Historial Local</h3>
+        <ul class="history-list" id="history-items"></ul>
+    </div>
+</div>
+
+<script>
+    let currentCategory = 'url';
+    let menuDataUrl = '';
+    let currentQRContent = '';
+    let qrGeneratorInstance = null;
+
+    const placeholders = {
+        url: { label: 'Ingresar URL del sitio', ph: 'https://ejemplo.com' },
+        wa: { label: 'Número de WhatsApp (Con código de área)', ph: '11 2345 6789' },
+        wifi: { label: 'Datos de red (Nombre,Clave,Seguridad)', ph: 'MiRed,Clave123,WPA' },
+        text: { label: 'Texto plano a codificar', ph: 'Escriba aquí el contenido...' },
+        email: { label: 'Dirección de correo electrónico', ph: 'destino@ejemplo.com' }
+    };
+
+    function switchTab(cat) {
+        currentCategory = cat;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
         
-        const infoDisplay = document.getElementById("info-display");
-        const infoType = document.getElementById("info-type");
-        const infoData = document.getElementById("info-data");
+        const mainInput = document.getElementById('main-input');
+        const fileZone = document.getElementById('file-zone');
+        const label = document.getElementById('input-label');
 
-        let currentCategory = "URL";
-        let currentRawData = "";
+        if (cat === 'menu') {
+            mainInput.style.display = 'none';
+            fileZone.style.display = 'block';
+            label.innerText = 'Subir archivo de Carta Menú';
+        } else {
+            mainInput.style.display = 'block';
+            fileZone.style.display = 'none';
+            label.innerText = placeholders[cat].label;
+            mainInput.value = '';
+            mainInput.placeholder = placeholders[cat].ph;
+            if (cat === 'wa') mainInput.placeholder = 'Ej: 11 3456 7890';
+        }
+    }
 
-        function changeType(element, type, placeholderText) {
-            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
-            element.classList.add('active');
-            currentCategory = type;
-            
-            qrInput.value = "";
-            fileElement.value = "";
-            currentRawData = "";
-            fileStatusLabel.innerText = "📁 Subir PDF o Imagen de la Carta";
-            qrcodeElement.innerHTML = "";
-            infoDisplay.style.display = "none";
+    function handleFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            menuDataUrl = e.target.result;
+            document.querySelector('#file-zone p').innerText = `Archivo cargado: ${file.name}`;
+        };
+        reader.readAsDataURL(file);
+    }
 
-            if (type === "Carta Menu") {
-                textContainer.style.display = "none";
-                fileContainer.style.display = "block";
-            } else {
-                textContainer.style.display = "block";
-                fileContainer.style.display = "none";
-                qrInput.placeholder = placeholderText;
-            }
+    function generateQR() {
+        const mainInput = document.getElementById('main-input').value.trim();
+        let finalContent = '';
+
+        if (currentCategory === 'menu') {
+            if (!menuDataUrl) return alert('Por favor, cargue un archivo primero.');
+            finalContent = menuDataUrl;
+        } else {
+            if (!mainInput) return alert('Por favor, complete el campo requerido.');
+            finalContent = mainInput;
         }
 
-        function handleFileSelection(input) {
-            if (input.files && input.files[0]) {
-                fileStatusLabel.innerText = `✓ Archivo cargado: ${input.files[0].name}`;
+        if (currentCategory === 'wa') {
+            let num = mainInput.replace(/\D/g, '');
+            if (num.startsWith('54')) {
+                num = num.substring(2);
             }
+            if (num.startsWith('9') && num.length > 10) {
+                num = num.replace(/^9/, '');
+            }
+            if (num.startsWith('0')) {
+                num = num.substring(1);
+            }
+            finalContent = `https://wa.me/54${num}`;
         }
 
-        function forceGenerateQR() {
-            qrcodeElement.innerHTML = "";
-            infoDisplay.style.display = "none";
+        currentQRContent = finalContent;
+        const qrContainer = document.getElementById('qrcode');
+        qrContainer.innerHTML = '';
 
-            if (currentCategory === "Carta Menu") {
-                if (!fileElement.files || !fileElement.files[0]) {
-                    alert("Por favor, selecciona primero un archivo.");
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    currentRawData = e.target.result;
-                    renderQR(currentRawData);
-                };
-                reader.readAsDataURL(fileElement.files[0]);
-            } else {
-                let currentText = qrInput.value.trim();
-                if (currentText === "") {
-                    alert("Por favor, ingresá datos primero.");
-                    return;
-                }
+        qrGeneratorInstance = new QRCode(qrContainer, {
+            text: finalContent,
+            width: 250,
+            height: 250,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.M
+        });
 
-                if (currentCategory === "WhatsApp") {
-                    let digits = currentText.replace(/\D/g, "");
-                    if (digits.startsWith("0")) digits = digits.substring(1);
-                    if (!digits.startsWith("54")) digits = "54" + digits;
-                    currentRawData = `https://wa.me/${digits}`;
-                } else if (currentCategory === "WiFi") {
-                    currentRawData = `WIFI:S:${currentText};T:WPA;P:;;`;
+        document.getElementById('qr-meta').innerText = `Contenido (${currentCategory.toUpperCase()}): ${finalContent}`;
+        document.getElementById('preview-container').style.display = 'block';
+    }
+
+    function downloadPNG() {
+        const qrImg = document.querySelector('#qrcode img');
+        if (!qrImg) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 450;
+        const ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.strokeStyle = "#e9ecef";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+
+        ctx.fillStyle = "#333333";
+        ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(`SERVICIO: ${currentCategory.toUpperCase()}`, canvas.width / 2, 40);
+
+        ctx.drawImage(qrImg, 75, 70, 250, 250);
+
+        ctx.fillStyle = "#666666";
+        ctx.font = "11px sans-serif";
+        let shortText = currentQRContent;
+        if (shortText.length > 45) shortText = shortText.substring(0, 42) + "...";
+        ctx.fillText(shortText, canvas.width / 2, 360);
+
+        ctx.fillStyle = "#007bff";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText("Generado con QR AI-ON Agencia & Mentoría", canvas.width / 2, 405);
+
+        const link = document.createElement('a');
+        link.download = `qr-aion-${currentCategory}-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+
+    function saveToHistory() {
+        let history = JSON.parse(localStorage.getItem('qr_aion_history')) || [];
+        const newItem = {
+            category: currentCategory,
+            content: currentQRContent,
+            date: new Date().toLocaleDateString()
+        };
+        history.unshift(newItem);
+        if (history.length > 10) history.pop();
+        localStorage.setItem('qr_aion_history', JSON.stringify(history));
+        loadHistory();
+    }
+
+    function loadHistory() {
+        const history = JSON.parse(localStorage.getItem('qr_aion_history')) || [];
+        const container = document.getElementById('history-items');
+        container.innerHTML = '';
+        history.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.innerText = `[${item.date}] (${item.category.toUpperCase()}): ${item.content}`;
+            li.title = item.content;
+            li.onclick = () => {
+                if (item.category === 'menu') {
+                    switchTab('menu');
+                    menuDataUrl = item.content;
+                    document.querySelector('#file-zone p').innerText = "Archivo cargado desde historial";
                 } else {
-                    currentRawData = currentText;
+                    switchTab(item.category);
+                    document.getElementById('main-input').value = item.content;
                 }
+                generateQR();
+            };
+            container.appendChild(li);
+        });
+    }
 
-                renderQR(currentRawData);
-            }
-        }
-
-        function renderQR(textToEncode) {
-            infoType.innerText = currentCategory;
-            infoData.innerText = textToEncode.length > 50 ? textToEncode.substring(0, 47) + "..." : textToEncode;
-            infoDisplay.style.display = "block";
-
-            new QRCode(qrcodeElement, {
-                text: textToEncode,
-                width: 160,
-                height: 160,
-                colorDark : "#111827",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.L
-            });
-        }
-
-        function downloadPNG() {
-            // Buscamos la imagen generada por la librería para asegurar compatibilidad móvil
-            const sourceImg = qrcodeElement.querySelector("img");
-            if (!sourceImg) {
-                alert("Por favor, primero generá el código QR usando el botón azul.");
-                return;
-            }
-
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            canvas.width = 400;
-            canvas.height = 450;
-
-            // FUERZA FONDO BLANCO SÓLIDO (Solución al color gris en celular)
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Borde elegante
-            ctx.strokeStyle = "#e9ecef";
-            ctx.lineWidth = 4;
-            ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
-
-            // Título Superior
-            ctx.fillStyle = "#111827";
-            ctx.font = "bold 20px Arial";
-            ctx.textAlign = "center";
-            ctx.fillText(`SERVICIO: QR ${currentCategory.toUpperCase()}`, canvas.width / 2, 50);
-
-            // Dibujamos la imagen asegurada del QR (Sin arrastrar transparencias oscuras)
-            ctx.drawImage(sourceImg, 100, 90, 200, 200);
-
-            // Textos inferiores
-            ctx.fillStyle = "#6b7280";
-            ctx.font = "13px Arial";
-            ctx.fillText("Contenido Codificado:", canvas.width / 2, 330);
-
-            ctx.fillStyle = "#111827";
-            ctx.font = "bold 14px Arial";
-            ctx.fillText(infoData.innerText, canvas.width / 2, 360);
-
-            // Firma de Marca Comercial AI-ON
-            ctx.fillStyle = "#007bff";
-            ctx.font = "bold 13px Arial";
-            ctx.fillText("Generado con QR AI-ON Agencia & Mentoría", canvas.width / 2, 412);
-
-            const downloadLink = document.createElement("a");
-            downloadLink.href = canvas.toDataURL("image/png");
-            downloadLink.download = `tarjeta-qr-${currentCategory.toLowerCase().replace(" ", "-")}.png`;
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
-        }
-
-        function saveQR() {
-            if (!currentRawData) return;
-            document.getElementById("history-content").innerHTML = `✓ Último guardado [${currentCategory}]: <strong>${infoData.innerText}</strong>`;
-        }
-    </script>
-
-    <script>
+    window.onload = function() {
+        loadHistory();
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('App lista', reg))
-                    .catch(err => console.log('Error', err));
-            });
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
         }
-    </script>
+    };
+</script>
+
 </body>
 </html>
