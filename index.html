@@ -29,7 +29,7 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.03);
             text-align: center;
         }
-        /* Encabezado exacto de la captura */
+        /* Encabezado */
         .header {
             display: flex;
             flex-direction: column;
@@ -58,7 +58,7 @@
             font-size: 14px;
             color: #6b7280;
         }
-        /* Grilla de pestañas de categorías */
+        /* Pestañas de categorías */
         .tabs-container {
             display: flex;
             flex-wrap: wrap;
@@ -84,25 +84,43 @@
             background: #111827;
             color: #ffffff;
         }
-        /* Campo de texto dinámico */
+        /* Campo de texto */
         .input-container {
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
         input[type="text"] {
             width: 100%;
-            padding: 12px 16px;
+            padding: 14px 16px;
             border: 1px solid #dee2e6;
             border-radius: 14px;
             font-size: 14px;
             outline: none;
             background: #f8f9fa;
             color: #212529;
+            transition: all 0.2s;
         }
         input[type="text"]:focus {
             border-color: #111827;
             background: #ffffff;
         }
-        /* Contenedor gris central de la captura */
+        /* Botón de Generar Principal (Azul Profesional) */
+        .btn-generate {
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 20px;
+        }
+        .btn-generate:hover {
+            background: #0056b3;
+        }
+        /* Contenedor central gris */
         .preview-box {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -117,12 +135,17 @@
         }
         #qrcode {
             margin-bottom: 20px;
+            min-height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         #qrcode img {
             display: block;
             background: #ffffff;
             padding: 8px;
             border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
         /* Botones de acción inferiores */
         .actions {
@@ -148,12 +171,18 @@
             color: #ffffff;
             border: none;
         }
+        .btn-dark:hover {
+            background: #1f2937;
+        }
         .btn-light {
             background: #ffffff;
             color: #111827;
             border: 1px solid #dee2e6;
         }
-        /* Sección Historial idéntica a la imagen */
+        .btn-light:hover {
+            background: #f8f9fa;
+        }
+        /* Sección Historial */
         .history-section {
             border-top: 1px solid #e9ecef;
             padding-top: 16px;
@@ -194,18 +223,20 @@
         </div>
 
         <div class="tabs-container">
-            <button class="tab active" onclick="changeType('URL', 'Ej: https://tu-sitio-web.com')">🔗 URL</button>
-            <button class="tab" onclick="changeType('Texto', 'Escribí el texto aquí...')">📝 Texto</button>
-            <button class="tab" onclick="changeType('WiFi', 'Ej: WIFI:S:NombreRed;T:WPA;P:Contraseña;;')">📶 WiFi</button>
-            <button class="tab" onclick="changeType('vCard', 'Ej: NOMBRE:Guillermo;TEL:123456789;;')">👤 vCard</button>
-            <button class="tab" onclick="changeType('Email', 'Ej: mailto:contacto@correo.com')">✉️ Email</button>
-            <button class="tab" onclick="changeType('Teléfono', 'Ej: tel:+5493547...')">📞 Teléfono</button>
-            <button class="tab" onclick="changeType('SMS', 'Ej: smsto:+5493547:Mensaje')">💬 SMS</button>
+            <button class="tab active" onclick="changeType(this, 'Ej: https://tu-sitio-web.com')">🔗 URL</button>
+            <button class="tab" onclick="changeType(this, 'Escribí el texto aquí...')">📝 Texto</button>
+            <button class="tab" onclick="changeType(this, 'Ej: WIFI:S:NombreRed;T:WPA;P:Contraseña;;')">📶 WiFi</button>
+            <button class="tab" onclick="changeType(this, 'Ej: NOMBRE:Guillermo;TEL:123456789;;')">👤 vCard</button>
+            <button class="tab" onclick="changeType(this, 'Ej: mailto:contacto@correo.com')">✉️ Email</button>
+            <button class="tab" onclick="changeType(this, 'Ej: tel:+5493547...')">📞 Teléfono</button>
+            <button class="tab" onclick="changeType(this, 'Ej: smsto:+5493547:Mensaje')">💬 SMS</button>
         </div>
 
         <div class="input-container">
-            <input type="text" id="qr-input" placeholder="Ej: https://tu-sitio-web.com" oninput="generateQR()" autocomplete="off">
+            <input type="text" id="qr-input" placeholder="Ej: https://tu-sitio-web.com" autocomplete="off">
         </div>
+
+        <button class="btn-generate" onclick="forceGenerateQR()">Generar Código QR</button>
 
         <div class="preview-box">
             <div id="qrcode"></div>
@@ -224,27 +255,31 @@
     </div>
 
     <script>
-        let qrcodeElement = document.getElementById("qrcode");
-        let qrInput = document.getElementById("qr-input");
-        let qrcode = null;
+        const qrcodeElement = document.getElementById("qrcode");
+        const qrInput = document.getElementById("qr-input");
+        let qrcodeInstance = null;
 
-        // Cambiar el placeholder según el tipo seleccionado
-        function changeType(type, placeholderText) {
+        // Cambiar entre categorías limpiamente
+        function changeType(element, placeholderText) {
             document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            element.classList.add('active');
             qrInput.placeholder = placeholderText;
             qrInput.value = "";
             qrcodeElement.innerHTML = "";
+            qrcodeInstance = null;
         }
 
-        // Generación dinámica al escribir
-        function generateQR() {
+        // Ejecución forzada desde el botón azul
+        function forceGenerateQR() {
             const currentText = qrInput.value.trim();
             qrcodeElement.innerHTML = "";
 
-            if (currentText === "") return;
+            if (currentText === "") {
+                alert("Por favor, ingresá datos primero en el campo de texto.");
+                return;
+            }
 
-            qrcode = new QRCode(qrcodeElement, {
+            qrcodeInstance = new QRCode(qrcodeElement, {
                 text: currentText,
                 width: 160,
                 height: 160,
@@ -254,11 +289,11 @@
             });
         }
 
-        // Descarga directa de la imagen generada
+        // Descarga directa de la imagen
         function downloadPNG() {
             const img = document.querySelector("#qrcode img");
             if (!img) {
-                alert("Por favor, ingresá datos primero para poder generar y descargar el QR.");
+                alert("Por favor, primero generá el código QR usando el botón azul.");
                 return;
             }
             const downloadLink = document.createElement("a");
@@ -269,7 +304,7 @@
             document.body.removeChild(downloadLink);
         }
 
-        // Guardado local en el historial
+        // Historial funcional
         function saveQR() {
             const currentText = qrInput.value.trim();
             if (currentText === "") {
