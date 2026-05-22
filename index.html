@@ -1,477 +1,122 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>QR Forge - Generador profesional de QR</title>
-  <!-- Para PWA: manifest generado en línea -->
-  <link rel="manifest" href="data:application/manifest+json,{
-    \"name\": \"QR Forge\",
-    \"short_name\": \"QRForge\",
-    \"start_url\": \".\",
-    \"display\": \"standalone\",
-    \"theme_color\": \"#0f172a\",
-    \"background_color\": \"#f0f4f8\",
-    \"icons\": [{
-      \"src\": \"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230f172a'/%3E%3Cpath fill='white' d='M30 30h15v15H30zM55 30h15v15H55zM30 55h15v15H30zM70 30h10v10H70zM70 55h10v10H70zM55 55h15v15H55zM30 80h40v10H30z'/%3E%3C/svg%3E\",
-      \"sizes\": \"100x100\",
-      \"type\": \"image/svg+xml\"
-    }]
-  }">
-  <!-- Librería QR (cargada desde CDN pero se cachea) -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-    body {
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-      background: #f0f4f8;
-      margin: 0;
-      padding: 16px;
-    }
-    .app {
-      max-width: 650px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 36px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
-      overflow: hidden;
-      padding: 20px;
-    }
-    h1 {
-      font-size: 1.8rem;
-      text-align: center;
-      margin: 0 0 8px 0;
-      color: #0f172a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .sub {
-      text-align: center;
-      color: #475569;
-      margin-bottom: 24px;
-      font-size: 0.9rem;
-    }
-    .tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 24px;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 12px;
-    }
-    .tab {
-      background: #f1f5f9;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 40px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .tab.active {
-      background: #0f172a;
-      color: white;
-    }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #0f172a;
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 20px;
-      font-size: 1rem;
-      background: white;
-      font-family: inherit;
-    }
-    textarea {
-      min-height: 90px;
-      resize: vertical;
-    }
-    .qr-preview {
-      background: #f8fafc;
-      border-radius: 28px;
-      padding: 20px;
-      text-align: center;
-      margin: 24px 0;
-      border: 1px solid #e2e8f0;
-    }
-    #qrcode {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 15px;
-    }
-    .button-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: center;
-    }
-    button {
-      background: #0f172a;
-      color: white;
-      border: none;
-      padding: 10px 22px;
-      border-radius: 40px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    button:active { transform: scale(0.97); }
-    .btn-outline {
-      background: white;
-      color: #0f172a;
-      border: 1px solid #cbd5e1;
-    }
-    .history-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-    }
-    .history-card {
-      background: white;
-      border: 1px solid #e2e8f0;
-      border-radius: 20px;
-      padding: 10px;
-      text-align: center;
-      transition: 0.1s;
-    }
-    .history-card img {
-      width: 80px;
-      height: 80px;
-      border-radius: 12px;
-    }
-    .history-card p {
-      font-size: 0.7rem;
-      margin: 6px 0;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    .small-btn {
-      background: #e2e8f0;
-      color: #0f172a;
-      border: none;
-      padding: 4px 10px;
-      border-radius: 30px;
-      font-size: 0.65rem;
-      margin: 2px;
-      cursor: pointer;
-    }
-    .alert {
-      background: #dcfce7;
-      color: #166534;
-      padding: 10px;
-      border-radius: 20px;
-      margin-bottom: 16px;
-      text-align: center;
-      font-size: 0.9rem;
-    }
-    hr {
-      margin: 20px 0;
-      border-color: #e2e8f0;
-    }
-    footer {
-      text-align: center;
-      font-size: 0.7rem;
-      color: #94a3b8;
-      margin-top: 20px;
-    }
-    @media (max-width: 500px) {
-      .app { padding: 16px; }
-      .tab { padding: 6px 12px; font-size: 0.75rem; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Forge - Generador Profesional</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #007bff;
+        }
+        button {
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #qrcode {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+        }
+        #qrcode img {
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
-<div class="app">
-  <h1>🔲 QR Forge</h1>
-  <div class="sub">Genera cualquier código QR profesional</div>
 
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-type="url">🔗 URL</button>
-    <button class="tab" data-type="text">📝 Texto</button>
-    <button class="tab" data-type="wifi">📶 WiFi</button>
-    <button class="tab" data-type="vcard">👤 vCard</button>
-    <button class="tab" data-type="email">✉️ Email</button>
-    <button class="tab" data-type="phone">📞 Teléfono</button>
-    <button class="tab" data-type="sms">💬 SMS</button>
-  </div>
+    <div class="container">
+        <h1>QR Forge</h1>
+        <p>Ingresá tu enlace o texto para generar el código QR al instante</p>
+        
+        <input type="text" id="qr-text" placeholder="Ej: https://tu-sitio-web.com" autocomplete="off">
+        
+        <button onclick="generateQR()">Generar Código QR</button>
 
-  <div id="inputArea"></div>
-
-  <div class="qr-preview">
-    <div id="qrcode"></div>
-    <div class="button-group">
-      <button id="downloadPNG">📸 Descargar PNG</button>
-      <button id="saveToHistory" class="btn-outline">💾 Guardar</button>
+        <div id="qrcode"></div>
     </div>
-  </div>
 
-  <hr>
-  <h3>📜 Historial de QR</h3>
-  <div id="historyContainer">No hay QR guardados aún.</div>
-  <footer>Los QR se guardan en tu dispositivo • Sin conexión después de primer uso</footer>
-</div>
-
-<script>
-  // --------------------------------------------------------------
-  // App completa con 7 tipos de QR e historial local (localStorage)
-  // --------------------------------------------------------------
-  let currentQRText = "";
-  
-  // Mostrar mensaje temporal
-  function showMessage(msg, isError = false) {
-    let old = document.querySelector('.alert');
-    if (old) old.remove();
-    let div = document.createElement('div');
-    div.className = 'alert';
-    div.textContent = msg;
-    div.style.background = isError ? '#fee2e2' : '#dcfce7';
-    div.style.color = isError ? '#991b1b' : '#166534';
-    document.querySelector('.app').insertBefore(div, document.getElementById('inputArea'));
-    setTimeout(() => div.remove(), 2500);
-  }
-
-  // Generar QR usando librería
-  function generateQR(text) {
-    if (!text || text.trim() === "") {
-      showMessage("⚠️ Ingresa los datos del QR", true);
-      return false;
-    }
-    try {
-      const container = document.getElementById('qrcode');
-      container.innerHTML = "";
-      new QRCode(container, {
-        text: text,
-        width: 220,
-        height: 220,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.M
-      });
-      currentQRText = text;
-      return true;
-    } catch(e) {
-      showMessage("Error: " + e.message, true);
-      return false;
-    }
-  }
-
-  // Obtener tipo actual
-  function getCurrentType() {
-    const active = document.querySelector('#tabs .active');
-    return active ? active.getAttribute('data-type') : 'url';
-  }
-
-  // Construir texto según tipo y campos
-  function buildQRText(type, fields) {
-    switch(type) {
-      case 'url': return fields.url || '';
-      case 'text': return fields.text || '';
-      case 'wifi': {
-        let ssid = fields.ssid || '';
-        let pass = fields.password || '';
-        let enc = fields.encryption || 'WPA';
-        if (!ssid) return '';
-        return WIFI:T:${enc};S:${ssid};P:${pass};;;
-      }
-      case 'vcard': {
-        let name = fields.name || '';
-        let phone = fields.phone || '';
-        let email = fields.email || '';
-        let org = fields.org || '';
-        return BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nTEL:${phone}\nEMAIL:${email}\nORG:${org}\nEND:VCARD;
-      }
-      case 'email': {
-        let to = fields.to || '';
-        let subject = fields.subject || '';
-        let body = fields.body || '';
-        return mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)};
-      }
-      case 'phone': return tel:${fields.phone || ''};
-      case 'sms': return smsto:${fields.number || ''}:${fields.message || ''};
-      default: return '';
-    }
-  }
-
-  // Recoger valores de los inputs dinámicos
-  function collectFields(type) {
-    let fields = {};
-    if (type === 'url') fields.url = document.getElementById('urlInput')?.value || '';
-    else if (type === 'text') fields.text = document.getElementById('textInput')?.value || '';
-    else if (type === 'wifi') {
-      fields.ssid = document.getElementById('ssidInput')?.value || '';
-      fields.password = document.getElementById('wifiPassInput')?.value || '';
-      fields.encryption = document.getElementById('encryptSelect')?.value || 'WPA';
-    } else if (type === 'vcard') {
-      fields.name = document.getElementById('vcardName')?.value || '';
-      fields.phone = document.getElementById('vcardPhone')?.value || '';
-      fields.email = document.getElementById('vcardEmail')?.value || '';
-      fields.org = document.getElementById('vcardOrg')?.value || '';
-    } else if (type === 'email') {
-      fields.to = document.getElementById('emailTo')?.value || '';
-      fields.subject = document.getElementById('emailSubject')?.value || '';
-      fields.body = document.getElementById('emailBody')?.value || '';
-    } else if (type === 'phone') {
-      fields.phone = document.getElementById('phoneNum')?.value || '';
-    } else if (type === 'sms') {
-      fields.number = document.getElementById('smsNumber')?.value || '';
-      fields.message = document.getElementById('smsMsg')?.value || '';
-    }
-    return fields;
-  }
-
-  // Actualizar QR desde formulario actual
-  function updateQR() {
-    const type = getCurrentType();
-    const fields = collectFields(type);
-    const text = buildQRText(type, fields);
-    if (text) generateQR(text);
-    else if (type === 'wifi' && !fields.ssid) return; // silencio
-    else showMessage("Completa los campos necesarios", true);
-  }
-
-  // Renderizar formulario según tipo
-  function renderFormByType(type) {
-    let html = '';
-    if (type === 'url') {
-      html = <div class="form-group"><label>🔗 URL (ej: https://tusitio.com/menu)</label><input type="url" id="urlInput" placeholder="https://" value="https://"></div>;
-    } else if (type === 'text') {
-      html = <div class="form-group"><label>📝 Texto libre</label><textarea id="textInput" rows="3" placeholder="Escribe cualquier texto, promoción o mensaje..."></textarea></div>;
-    } else if (type === 'wifi') {
-      html = `<div class="form-group"><label>📶 Nombre WiFi (SSID)</label><input id="ssidInput" placeholder="MiWifiRestaurante"></div>
-              <div class="form-group"><label>🔑 Contraseña</label><input id="wifiPassInput" type="password" placeholder="contraseña"></div>
-              <div class="form-group"><label>🔒 Encriptación</label><select id="encryptSelect"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">Sin contraseña</option></select></div>`;
-    } else if (type === 'vcard') {
-      html = `<div class="form-group"><label>👤 Nombre completo</label><input id="vcardName" placeholder="Juan Pérez"></div>
-              <div class="form-group"><label>📞 Teléfono</label><input id="vcardPhone" placeholder="+123456789"></div>
-              <div class="form-group"><label>✉️ Email</label><input id="vcardEmail" placeholder="contacto@ejemplo.com"></div>
-              <div class="form-group"><label>🏢 Empresa / Organización</label><input id="vcardOrg" placeholder="Mi Restaurante"></div>`;
-    } else if (type === 'email') {
-      html = `<div class="form-group"><label>📧 Destinatario</label><input id="emailTo" placeholder="cliente@ejemplo.com"></div>
-              <div class="form-group"><label>📌 Asunto</label><input id="emailSubject" placeholder="Oferta especial"></div>
-              <div class="form-group"><label>💬 Mensaje</label><textarea id="emailBody" rows="2" placeholder="Escribe el contenido del correo..."></textarea></div>`;
-    } else if (type === 'phone') {
-      html = <div class="form-group"><label>📞 Número de teléfono</label><input id="phoneNum" type="tel" placeholder="+123456789"></div>;
-    } else if (type === 'sms') {
-      html = `<div class="form-group"><label>📱 Número destino</label><input id="smsNumber" type="tel" placeholder="+123456789"></div>
-              <div class="form-group"><label>💬 Mensaje SMS</label><textarea id="smsMsg" rows="2" placeholder="Texto del mensaje..."></textarea></div>`;
-    }
-    document.getElementById('inputArea').innerHTML = html;
-    // Añadir eventos input a todos los campos recién creados
-    const inputs = document.querySelectorAll('#inputArea input, #inputArea textarea, #inputArea select');
-    inputs.forEach(input => input.addEventListener('input', updateQR));
-    updateQR();
-  }
-
-  // ------------- Historial (localStorage) -------------
-  function saveCurrentToHistory() {
-    if (!currentQRText) { showMessage("No hay QR generado para guardar", true); return; }
-    const canvas = document.querySelector('#qrcode canvas');
-    if (!canvas) { showMessage("Error al capturar la imagen", true); return; }
-    const imgData = canvas.toDataURL('image/png');
-    const type = getCurrentType();
-    const preview = currentQRText.length > 45 ? currentQRText.slice(0,42)+'...' : currentQRText;
-    const item = {
-      id: Date.now(),
-      type: type,
-      content: preview,
-      fullText: currentQRText,
-      image: imgData
-    };
-    let history = JSON.parse(localStorage.getItem('qr_forge_history') || '[]');
-    history.unshift(item);
-    if (history.length > 25) history.pop();
-    localStorage.setItem('qr_forge_history', JSON.stringify(history));
-    showMessage("✅ QR guardado en historial");
-    renderHistory();
-  }
-
-  function renderHistory() {
-    const history = JSON.parse(localStorage.getItem('qr_forge_history') || '[]');
-    const container = document.getElementById('historyContainer');
-    if (history.length === 0) {
-      container.innerHTML = "<p style='color: #64748b;'>No hay códigos guardados aún.</p>";
-      return;
-    }
-    let html = '<div class="history-grid">';
-    history.forEach(item => {
-      html += `
-        <div class="history-card">
-          <img src="${item.image}" alt="QR">
-          <p><strong>${item.type}</strong><br>${item.content}</p>
-          <button class="small-btn reuse" data-id="${item.id}">Reusar</button>
-          <button class="small-btn delete" data-id="${item.id}">🗑️</button>
-        </div>
-      `;
-    });
-    html += '</div>';
-    container.innerHTML = html;
-    // Eventos reutilizar
-    document.querySelectorAll('.reuse').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = parseInt(btn.getAttribute('data-id'));
-        const item = history.find(h => h.id === id);
-        if (item) generateQR(item.fullText);
-        showMessage("QR cargado, puedes descargarlo");
-      });
-    });
-    // Eventos eliminar
-    document.querySelectorAll('.delete').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = parseInt(btn.getAttribute('data-id'));
-        let newHistory = history.filter(h => h.id !== id);
-        localStorage.setItem('qr_forge_history', JSON.stringify(newHistory));
-        renderHistory();
-        showMessage("Eliminado del historial");
-      });
-    });
-  }
-
-  // ---------- Eventos botones ----------
-  document.getElementById('downloadPNG').addEventListener('click', () => {
-    const canvas = document.querySelector('#qrcode canvas');
-    if (canvas) {
-      const link = document.createElement('a');
-      link.download = qr_forge_${Date.now()}.png;
-      link.href = canvas.toDataURL();
-      link.click();
-      showMessage("PNG descargado");
-    } else {
-      showMessage("Primero genera un QR", true);
-    }
-  });
-
-  document.getElementById('saveToHistory').addEventListener('click', saveCurrentToHistory);
-
-  // Inicialización de pestañas
-  const tabs = document.querySelectorAll('.tab');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      renderFormByType(tab.getAttribute('data-type'));
-    });
-  });
-
-  // Arrancar con URL
-  renderFormByType('url');
-  renderHistory();
-</script>
+    <script>
+        let qrcode = null;
+        function generateQR() {
+            const input = document.getElementById("qr-text").value.trim();
+            const qrContainer = document.getElementById("qrcode");
+            
+            if (input === "") {
+                alert("Por favor, ingresá un enlace o texto primero.");
+                return;
+            }
+            
+            // Limpiamos el QR anterior si existe
+            qrContainer.innerHTML = "";
+            
+            // Generamos el nuevo QR
+            qrcode = new QRCode(qrContainer, {
+                text: input,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    </script>
 </body>
 </html>
