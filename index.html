@@ -19,7 +19,7 @@
         .tab-btn.active { color: #007bff; border-bottom-color: #007bff; }
         .input-group { margin-bottom: 20px; }
         label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; color: #444; }
-        input[type="text"], input[type="email"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; outline: none; transition: border 0.2s; }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; outline: none; transition: border 0.2s; }
         input:focus { border-color: #007bff; }
         .drop-zone { border: 2px dashed #007bff; border-radius: 8px; padding: 30px 10px; text-align: center; background: #f8faff; cursor: pointer; display: none; }
         .drop-zone p { font-size: 13px; color: #555; font-weight: 500; }
@@ -29,7 +29,7 @@
         .preview-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; text-align: center; display: none; margin-bottom: 25px; }
         .preview-info { font-size: 12px; color: #666; margin-bottom: 15px; word-break: break-all; max-height: 40px; overflow: hidden; text-overflow: ellipsis; }
         .qr-wrapper { background: #fff; padding: 15px; display: inline-block; border-radius: 6px; border: 1px solid #dee2e6; margin-bottom: 15px; }
-        .qr-wrapper img { display: block; margin: 0 auto; }
+        .qr-wrapper img, .qr-wrapper canvas { display: block; margin: 0 auto; max-width: 250px; }
         .action-btns { display: block; text-align: center; }
         .btn-action { display: block; width: 100%; padding: 11px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; margin-bottom: 8px; }
         .btn-download { background: #111111; color: #fff; }
@@ -37,7 +37,7 @@
         .history-box { border-top: 1px solid #eee; padding-top: 20px; }
         .history-box h3 { font-size: 14px; color: #222; margin-bottom: 12px; }
         .history-list { list-style: none; max-height: 150px; overflow-y: auto; }
-        .history-item { display: block; padding: 8px; background: #f8f9fa; border-radius: 4px; margin-bottom: 6px; font-size: 12px; color: #444; text-decoration: none; border-left: 3px solid #007bff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-item { display: block; padding: 8px; background: #f8f9fa; border-radius: 4px; margin-bottom: 6px; font-size: 12px; color: #444; text-decoration: none; border-left: 3px solid #007bff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -62,7 +62,7 @@
         <input type="text" id="main-input" placeholder="https://ejemplo.com">
         <div id="file-zone" class="drop-zone" onclick="document.getElementById('file-input').click()">
             <p>Seleccionar o arrastrar archivo de la Carta</p>
-            <span>Soporta imágenes o PDF (Máx. 500kb para optimización de QR)</span>
+            <span>Soporta imágenes o PDF (Máx. 500kb para optimización)</span>
             <input type="file" id="file-input" style="display:none" accept="image/*,application/pdf" onchange="handleFile(this)">
         </div>
     </div>
@@ -88,11 +88,10 @@
     let currentCategory = 'url';
     let menuDataUrl = '';
     let currentQRContent = '';
-    let qrGeneratorInstance = null;
 
     const placeholders = {
         url: { label: 'Ingresar URL del sitio', ph: 'https://ejemplo.com' },
-        wa: { label: 'Número de WhatsApp (Con código de área)', ph: '11 2345 6789' },
+        wa: { label: 'Número de WhatsApp (Con código de área)', ph: '54 9 3547 50-9528' },
         wifi: { label: 'Datos de red (Nombre,Clave,Seguridad)', ph: 'MiRed,Clave123,WPA' },
         text: { label: 'Texto plano a codificar', ph: 'Escriba aquí el contenido...' },
         email: { label: 'Dirección de correo electrónico', ph: 'destino@ejemplo.com' }
@@ -117,7 +116,6 @@
             label.innerText = placeholders[cat].label;
             mainInput.value = '';
             mainInput.placeholder = placeholders[cat].ph;
-            if (cat === 'wa') mainInput.placeholder = 'Ej: 11 3456 7890';
         }
     }
 
@@ -146,11 +144,13 @@
 
         if (currentCategory === 'wa') {
             let num = mainInput.replace(/\D/g, '');
-            if (num.startsWith('54')) {
+            if (num.startsWith('549')) {
+                num = num.substring(3);
+            } else if (num.startsWith('54')) {
                 num = num.substring(2);
             }
             if (num.startsWith('9') && num.length > 10) {
-                num = num.replace(/^9/, '');
+                num = num.substring(1);
             }
             if (num.startsWith('0')) {
                 num = num.substring(1);
@@ -162,7 +162,7 @@
         const qrContainer = document.getElementById('qrcode');
         qrContainer.innerHTML = '';
 
-        qrGeneratorInstance = new QRCode(qrContainer, {
+        new QRCode(qrContainer, {
             text: finalContent,
             width: 250,
             height: 250,
@@ -175,10 +175,7 @@
         document.getElementById('preview-container').style.display = 'block';
     }
 
-    function downloadPNG() {
-        const qrImg = document.querySelector('#qrcode img');
-        if (!qrImg) return;
-
+    function processCanvasDownload(sourceElement) {
         const canvas = document.createElement('canvas');
         canvas.width = 400;
         canvas.height = 450;
@@ -192,11 +189,11 @@
         ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
 
         ctx.fillStyle = "#333333";
-        ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(`SERVICIO: ${currentCategory.toUpperCase()}`, canvas.width / 2, 40);
 
-        ctx.drawImage(qrImg, 75, 70, 250, 250);
+        ctx.drawImage(sourceElement, 75, 70, 250, 250);
 
         ctx.fillStyle = "#666666";
         ctx.font = "11px sans-serif";
@@ -212,6 +209,25 @@
         link.download = `qr-aion-${currentCategory}-${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
+    }
+
+    function downloadPNG() {
+        const qrImg = document.querySelector('#qrcode img');
+        const qrCanvas = document.querySelector('#qrcode canvas');
+
+        if (qrImg && qrImg.src && qrImg.src !== '') {
+            if (qrImg.complete) {
+                processCanvasDownload(qrImg);
+            } else {
+                qrImg.onload = function() {
+                    processCanvasDownload(qrImg);
+                };
+            }
+        } else if (qrCanvas) {
+            processCanvasDownload(qrCanvas);
+        } else {
+            alert('Error en la matriz de origen: El código QR aún no se ha renderizado.');
+        }
     }
 
     function saveToHistory() {
@@ -235,7 +251,6 @@
             const li = document.createElement('li');
             li.className = 'history-item';
             li.innerText = `[${item.date}] (${item.category.toUpperCase()}): ${item.content}`;
-            li.title = item.content;
             li.onclick = () => {
                 if (item.category === 'menu') {
                     switchTab('menu');
