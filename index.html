@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <link rel="manifest" href="manifest.json">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Forge - Generador Profesional</title>
+    <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
@@ -85,7 +85,7 @@
             background: #111827;
             color: #ffffff;
         }
-        /* Campo de texto */
+        /* Campos de Entrada */
         .input-container {
             margin-bottom: 12px;
         }
@@ -104,7 +104,25 @@
             border-color: #111827;
             background: #ffffff;
         }
-        /* Botón de Generar Principal (Azul Profesional) */
+        /* Entrada de archivos oculta por defecto */
+        .file-box {
+            display: none;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+        .file-box input {
+            display: none;
+        }
+        .file-label {
+            font-size: 14px;
+            color: #495057;
+            font-weight: 500;
+        }
+        /* Botón de Generar Principal */
         .btn-generate {
             width: 100%;
             background: #007bff;
@@ -133,6 +151,25 @@
             align-items: center;
             min-height: 200px;
             justify-content: center;
+        }
+        /* Datos informativos del QR */
+        .qr-info-display {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            text-align: left;
+            display: none; /* Se activa con JS */
+        }
+        .qr-info-display div {
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+        .qr-info-display strong {
+            color: #111827;
         }
         #qrcode {
             margin-bottom: 20px;
@@ -224,22 +261,33 @@
         </div>
 
         <div class="tabs-container">
-            <button class="tab active" onclick="changeType(this, 'Ej: https://tu-sitio-web.com')">🔗 URL</button>
-            <button class="tab" onclick="changeType(this, 'Escribí el texto aquí...')">📝 Texto</button>
-            <button class="tab" onclick="changeType(this, 'Ej: WIFI:S:NombreRed;T:WPA;P:Contraseña;;')">📶 WiFi</button>
-            <button class="tab" onclick="changeType(this, 'Ej: NOMBRE:Guillermo;TEL:123456789;;')">👤 vCard</button>
-            <button class="tab" onclick="changeType(this, 'Ej: mailto:contacto@correo.com')">✉️ Email</button>
-            <button class="tab" onclick="changeType(this, 'Ej: tel:+5493547...')">📞 Teléfono</button>
-            <button class="tab" onclick="changeType(this, 'Ej: smsto:+5493547:Mensaje')">💬 SMS</button>
+            <button class="tab active" onclick="changeType(this, 'URL', 'Ej: https://tu-sitio-web.com')">🔗 URL</button>
+            <button class="tab" onclick="changeType(this, 'Texto', 'Escribí el texto aquí...')">📝 Texto</button>
+            <button class="tab" onclick="changeType(this, 'WiFi', 'Ej: WIFI:S:NombreRed;T:WPA;P:Contraseña;;')">📶 WiFi</button>
+            <button class="tab" onclick="changeType(this, 'vCard', 'Ej: NOMBRE:Guillermo;TEL:123456789;;')">👤 vCard</button>
+            <button class="tab" onclick="changeType(this, 'Email', 'Ej: mailto:contacto@correo.com')">✉️ Email</button>
+            <button class="tab" onclick="changeType(this, 'WhatsApp', 'Ej: https://wa.me/5493547...')">💬 WhatsApp</button>
+            <button class="tab" onclick="changeType(this, 'Carta Menu', '')">📋 Carta Menú</button>
         </div>
 
-        <div class="input-container">
+        <div class="input-container" id="text-input-container">
             <input type="text" id="qr-input" placeholder="Ej: https://tu-sitio-web.com" autocomplete="off">
+        </div>
+
+        <div class="file-box" id="file-input-container" onclick="document.getElementById('file-element').click()">
+            <span class="file-label" id="file-status-label">📁 Subir PDF o Imagen de la Carta</span>
+            <input type="file" id="file-element" accept="application/pdf, image/*" onchange="handleFileSelection(this)">
         </div>
 
         <button class="btn-generate" onclick="forceGenerateQR()">Generar Código QR</button>
 
         <div class="preview-box">
+            
+            <div class="qr-info-display" id="info-display">
+                <div><strong>Tipo de QR:</strong> <span id="info-type">-</span></div>
+                <div><strong>Contenido/Enlace:</strong> <span id="info-data">-</span></div>
+            </div>
+
             <div id="qrcode"></div>
             
             <div class="actions">
@@ -256,33 +304,90 @@
     </div>
 
     <script>
-        // Lógica limpia y corregida
         const qrcodeElement = document.getElementById("qrcode");
         const qrInput = document.getElementById("qr-input");
+        const textContainer = document.getElementById("text-input-container");
+        const fileContainer = document.getElementById("file-input-container");
+        const fileElement = document.getElementById("file-element");
+        const fileStatusLabel = document.getElementById("file-status-label");
+        
+        const infoDisplay = document.getElementById("info-display");
+        const infoType = document.getElementById("info-type");
+        const infoData = document.getElementById("info-data");
+
+        let currentCategory = "URL";
+        let uploadedFileUrl = "";
         let qrcodeInstance = null;
 
-        // Función corregida para cambiar pestañas sin romper el script
-        function changeType(element, placeholderText) {
+        // Cambiar entre categorías
+        function changeType(element, type, placeholderText) {
             document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
-            qrInput.placeholder = placeholderText;
+            currentCategory = type;
+            
+            // Resetear estados e interfaz de información
             qrInput.value = "";
+            fileElement.value = "";
+            uploadedFileUrl = "";
+            fileStatusLabel.innerText = "📁 Subir PDF o Imagen de la Carta";
             qrcodeElement.innerHTML = "";
+            infoDisplay.style.display = "none";
             qrcodeInstance = null;
+
+            // Mostrar el input correcto según la categoría elegida
+            if (type === "Carta Menu") {
+                textContainer.style.display = "none";
+                fileContainer.style.display = "block";
+            } else {
+                textContainer.style.display = "block";
+                fileContainer.style.display = "none";
+                qrInput.placeholder = placeholderText;
+            }
         }
 
-        // Ejecución forzada desde el botón azul
-        function forceGenerateQR() {
-            const currentText = qrInput.value.trim();
-            qrcodeElement.innerHTML = "";
-
-            if (currentText === "") {
-                alert("Por favor, ingresá datos primero en el campo de texto.");
-                return;
+        // Controlar la selección visual del archivo
+        function handleFileSelection(input) {
+            if (input.files && input.files[0]) {
+                fileStatusLabel.innerText = `✓ Archivo cargado: ${input.files[0].name}`;
             }
+        }
 
+        // Simulación profesional de procesamiento y subida de archivos en la nube
+        function forceGenerateQR() {
+            qrcodeElement.innerHTML = "";
+            infoDisplay.style.display = "none";
+
+            if (currentCategory === "Carta Menu") {
+                if (!fileElement.files || !fileElement.files[0]) {
+                    alert("Por favor, selecciona primero un archivo de tu carta (PDF o Imagen).");
+                    return;
+                }
+                
+                // Generamos un enlace de almacenamiento temporal simulado para el archivo
+                const tempFileName = encodeURIComponent(fileElement.files[0].name);
+                uploadedFileUrl = `https://tu-servidor-menu.com/storage/files/${Date.now()}-${tempFileName}`;
+                
+                renderQR(uploadedFileUrl);
+            } else {
+                const currentText = qrInput.value.trim();
+                if (currentText === "") {
+                    alert("Por favor, ingresá datos primero en el campo de texto.");
+                    return;
+                }
+                renderQR(currentText);
+            }
+        }
+
+        // Renderizado físico y visualización de la información arriba del QR
+        function renderQR(textToEncode) {
+            // Activar el cuadro informativo con los datos reales
+            infoType.innerText = currentCategory;
+            infoData.innerText = textToEncode;
+            infoDisplay.style.display = "block";
+
+            // Crear el código QR
             qrcodeInstance = new QRCode(qrcodeElement, {
-                text: currentText,
+                text: textToEncode,
                 width: 160,
                 height: 160,
                 colorDark : "#111827",
@@ -300,21 +405,21 @@
             }
             const downloadLink = document.createElement("a");
             downloadLink.href = img.src;
-            downloadLink.download = "qr-forge-code.png";
+            downloadLink.download = `qr-${currentCategory.toLowerCase().replace(" ", "-")}.png`;
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
         }
 
-        // Historial funcional de la interfaz
+        // Historial funcional
         function saveQR() {
-            const currentText = qrInput.value.trim();
-            if (currentText === "") {
+            const dataText = (currentCategory === "Carta Menu") ? uploadedFileUrl : qrInput.value.trim();
+            if (!dataText) {
                 alert("No hay información válida para guardar.");
                 return;
             }
             const historyContent = document.getElementById("history-content");
-            historyContent.innerHTML = `✓ Último guardado: <strong>${currentText}</strong>`;
+            historyContent.innerHTML = `✓ Último guardado [${currentCategory}]: <strong>${dataText}</strong>`;
         }
     </script>
 </body>
