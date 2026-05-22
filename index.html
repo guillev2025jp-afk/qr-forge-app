@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#007bff">
     <title>QR AI-ON - Agencia & Mentoría</title>
     <link rel="manifest" href="manifest.json">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #f4f6f9; color: #333; padding: 20px; display: block; }
@@ -29,7 +29,7 @@
         .preview-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; text-align: center; display: none; margin-bottom: 25px; }
         .preview-info { font-size: 12px; color: #666; margin-bottom: 15px; word-break: break-all; max-height: 40px; overflow: hidden; text-overflow: ellipsis; }
         .qr-wrapper { background: #fff; padding: 15px; display: inline-block; border-radius: 6px; border: 1px solid #dee2e6; margin-bottom: 15px; }
-        .qr-wrapper img, .qr-wrapper canvas { display: block; margin: 0 auto; max-width: 250px; }
+        .qr-wrapper canvas { display: block; margin: 0 auto; width: 250px; height: 250px; }
         .action-btns { display: block; text-align: center; }
         .btn-action { display: block; width: 100%; padding: 11px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; margin-bottom: 8px; }
         .btn-download { background: #111111; color: #fff; }
@@ -71,7 +71,9 @@
 
     <div class="preview-box" id="preview-container">
         <div class="preview-info" id="qr-meta"></div>
-        <div class="qr-wrapper" id="qrcode"></div>
+        <div class="qr-wrapper">
+            <canvas id="qr-canvas-element"></canvas>
+        </div>
         <div class="action-btns">
             <button class="btn-action btn-download" onclick="downloadPNG()">📸 Descargar PNG</button>
             <button class="btn-action btn-save" onclick="saveToHistory()">💾 Guardar</button>
@@ -88,6 +90,7 @@
     let currentCategory = 'url';
     let menuDataUrl = '';
     let currentQRContent = '';
+    let qrInstance = null;
 
     const placeholders = {
         url: { label: 'Ingresar URL del sitio', ph: 'https://ejemplo.com' },
@@ -159,75 +162,64 @@
         }
 
         currentQRContent = finalContent;
-        const qrContainer = document.getElementById('qrcode');
-        qrContainer.innerHTML = '';
 
-        new QRCode(qrContainer, {
-            text: finalContent,
-            width: 250,
-            height: 250,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.M
-        });
+        if(!qrInstance) {
+            qrInstance = new QRious({
+                element: document.getElementById('qr-canvas-element'),
+                size: 250,
+                level: 'M'
+            });
+        }
+        qrInstance.value = finalContent;
 
         document.getElementById('qr-meta').innerText = `Contenido (${currentCategory.toUpperCase()}): ${finalContent}`;
         document.getElementById('preview-container').style.display = 'block';
     }
 
-    function processCanvasDownload(sourceElement) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 400;
-        canvas.height = 450;
-        const ctx = canvas.getContext('2d');
+    function downloadPNG() {
+        const baseCanvas = document.getElementById('qr-canvas-element');
+        if (!baseCanvas) return;
 
+        const downloadCanvas = document.createElement('canvas');
+        downloadCanvas.width = 400;
+        downloadCanvas.height = 450;
+        const ctx = downloadCanvas.getContext('2d');
+
+        // Fondo blanco e inmunidad de transparencias
         ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
 
+        // Borde estético perimetral
         ctx.strokeStyle = "#e9ecef";
         ctx.lineWidth = 4;
-        ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+        ctx.strokeRect(10, 10, downloadCanvas.width - 20, downloadCanvas.height - 20);
 
+        // Título de la Categoría
         ctx.fillStyle = "#333333";
         ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText(`SERVICIO: ${currentCategory.toUpperCase()}`, canvas.width / 2, 40);
+        ctx.fillText(`SERVICIO: ${currentCategory.toUpperCase()}`, downloadCanvas.width / 2, 40);
 
-        ctx.drawImage(sourceElement, 75, 70, 250, 250);
+        // Estampado directo de canvas a canvas (Síncrono y libre de CORS de imágenes)
+        ctx.drawImage(baseCanvas, 75, 70, 250, 250);
 
+        // Metadata reducida
         ctx.fillStyle = "#666666";
         ctx.font = "11px sans-serif";
         let shortText = currentQRContent;
         if (shortText.length > 45) shortText = shortText.substring(0, 42) + "...";
-        ctx.fillText(shortText, canvas.width / 2, 360);
+        ctx.fillText(shortText, downloadCanvas.width / 2, 360);
 
+        // Firma Corporativa de Autoridad
         ctx.fillStyle = "#007bff";
         ctx.font = "bold 13px sans-serif";
-        ctx.fillText("Generado con QR AI-ON Agencia & Mentoría", canvas.width / 2, 405);
+        ctx.fillText("Generado con QR AI-ON Agencia & Mentoría", downloadCanvas.width / 2, 405);
 
+        // Forzar disparo de descarga
         const link = document.createElement('a');
         link.download = `qr-aion-${currentCategory}-${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png');
+        link.href = downloadCanvas.toDataURL('image/png');
         link.click();
-    }
-
-    function downloadPNG() {
-        const qrImg = document.querySelector('#qrcode img');
-        const qrCanvas = document.querySelector('#qrcode canvas');
-
-        if (qrImg && qrImg.src && qrImg.src !== '') {
-            if (qrImg.complete) {
-                processCanvasDownload(qrImg);
-            } else {
-                qrImg.onload = function() {
-                    processCanvasDownload(qrImg);
-                };
-            }
-        } else if (qrCanvas) {
-            processCanvasDownload(qrCanvas);
-        } else {
-            alert('Error en la matriz de origen: El código QR aún no se ha renderizado.');
-        }
     }
 
     function saveToHistory() {
