@@ -171,7 +171,8 @@
             align-items: center;
             justify-content: center;
         }
-        #qrcode canvas, #qrcode img {
+        /* Configuración nativa de la librería: aseguramos compatibilidad iOS/Android */
+        #qrcode img, #qrcode canvas {
             display: block;
             background: #ffffff;
             padding: 12px;
@@ -216,7 +217,7 @@
         /* Sección Historial */
         .history-section {
             border-top: 1px solid #e9ecef;
-            padding-top: 16px;
+            padding-top: 166px;
             text-align: left;
             margin-top: 16px;
         }
@@ -278,4 +279,172 @@
 
         <div class="history-section">
             <div class="history-title">📜 Historial de QR</div>
-            <div class="history-status" id="history-
+            <div class="history-status" id="history-content">No hay QR guardados aún.</div>
+        </div>
+    </div>
+
+    <script>
+        const qrcodeElement = document.getElementById("qrcode");
+        const qrInput = document.getElementById("qr-input");
+        const textContainer = document.getElementById("text-input-container");
+        const fileContainer = document.getElementById("file-input-container");
+        const fileElement = document.getElementById("file-element");
+        const fileStatusLabel = document.getElementById("file-status-label");
+        
+        const infoDisplay = document.getElementById("info-display");
+        const infoType = document.getElementById("info-type");
+        const infoData = document.getElementById("info-data");
+
+        let currentCategory = "URL";
+        let currentRawData = "";
+
+        function changeType(element, type, placeholderText) {
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            currentCategory = type;
+            
+            qrInput.value = "";
+            fileElement.value = "";
+            currentRawData = "";
+            fileStatusLabel.innerText = "📁 Subir PDF o Imagen de la Carta";
+            qrcodeElement.innerHTML = "";
+            infoDisplay.style.display = "none";
+
+            if (type === "Carta Menu") {
+                textContainer.style.display = "none";
+                fileContainer.style.display = "block";
+            } else {
+                textContainer.style.display = "block";
+                fileContainer.style.display = "none";
+                qrInput.placeholder = placeholderText;
+            }
+        }
+
+        function handleFileSelection(input) {
+            if (input.files && input.files[0]) {
+                fileStatusLabel.innerText = `✓ Archivo cargado: ${input.files[0].name}`;
+            }
+        }
+
+        function forceGenerateQR() {
+            qrcodeElement.innerHTML = "";
+            infoDisplay.style.display = "none";
+
+            if (currentCategory === "Carta Menu") {
+                if (!fileElement.files || !fileElement.files[0]) {
+                    alert("Por favor, selecciona primero un archivo.");
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentRawData = e.target.result;
+                    renderQR(currentRawData);
+                };
+                reader.readAsDataURL(fileElement.files[0]);
+            } else {
+                let currentText = qrInput.value.trim();
+                if (currentText === "") {
+                    alert("Por favor, ingresá datos primero.");
+                    return;
+                }
+
+                if (currentCategory === "WhatsApp") {
+                    let digits = currentText.replace(/\D/g, "");
+                    if (digits.startsWith("0")) digits = digits.substring(1);
+                    if (!digits.startsWith("54")) digits = "54" + digits;
+                    currentRawData = `https://wa.me/${digits}`;
+                } else if (currentCategory === "WiFi") {
+                    currentRawData = `WIFI:S:${currentText};T:WPA;P:;;`;
+                } else {
+                    currentRawData = currentText;
+                }
+
+                renderQR(currentRawData);
+            }
+        }
+
+        function renderQR(textToEncode) {
+            infoType.innerText = currentCategory;
+            infoData.innerText = textToEncode.length > 50 ? textToEncode.substring(0, 47) + "..." : textToEncode;
+            infoDisplay.style.display = "block";
+
+            new QRCode(qrcodeElement, {
+                text: textToEncode,
+                width: 160,
+                height: 160,
+                colorDark : "#111827",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.L
+            });
+        }
+
+        function downloadPNG() {
+            // Buscamos la imagen generada por la librería para asegurar compatibilidad móvil
+            const sourceImg = qrcodeElement.querySelector("img");
+            if (!sourceImg) {
+                alert("Por favor, primero generá el código QR usando el botón azul.");
+                return;
+            }
+
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = 400;
+            canvas.height = 450;
+
+            // FUERZA FONDO BLANCO SÓLIDO (Solución al color gris en celular)
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Borde elegante
+            ctx.strokeStyle = "#e9ecef";
+            ctx.lineWidth = 4;
+            ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+
+            // Título Superior
+            ctx.fillStyle = "#111827";
+            ctx.font = "bold 20px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(`SERVICIO: QR ${currentCategory.toUpperCase()}`, canvas.width / 2, 50);
+
+            // Dibujamos la imagen asegurada del QR (Sin arrastrar transparencias oscuras)
+            ctx.drawImage(sourceImg, 100, 90, 200, 200);
+
+            // Textos inferiores
+            ctx.fillStyle = "#6b7280";
+            ctx.font = "13px Arial";
+            ctx.fillText("Contenido Codificado:", canvas.width / 2, 330);
+
+            ctx.fillStyle = "#111827";
+            ctx.font = "bold 14px Arial";
+            ctx.fillText(infoData.innerText, canvas.width / 2, 360);
+
+            // Firma de Marca Comercial AI-ON
+            ctx.fillStyle = "#007bff";
+            ctx.font = "bold 13px Arial";
+            ctx.fillText("Generado con QR AI-ON Agencia & Mentoría", canvas.width / 2, 412);
+
+            const downloadLink = document.createElement("a");
+            downloadLink.href = canvas.toDataURL("image/png");
+            downloadLink.download = `tarjeta-qr-${currentCategory.toLowerCase().replace(" ", "-")}.png`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
+        function saveQR() {
+            if (!currentRawData) return;
+            document.getElementById("history-content").innerHTML = `✓ Último guardado [${currentCategory}]: <strong>${infoData.innerText}</strong>`;
+        }
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('App lista', reg))
+                    .catch(err => console.log('Error', err));
+            });
+        }
+    </script>
+</body>
+</html>
