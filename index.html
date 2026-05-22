@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Forge - Generador Profesional</title>
+    <title>QR AI-ON - Generador de Códigos QR</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -43,13 +43,6 @@
             gap: 12px;
             margin-bottom: 6px;
         }
-        .logo-box {
-            width: 28px;
-            height: 28px;
-            border: 3px solid #6c757d;
-            border-radius: 6px;
-            background: #e9ecef;
-        }
         h1 {
             font-size: 24px;
             font-weight: 700;
@@ -76,20 +69,17 @@
             font-weight: 500;
             color: #495057;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
             transition: all 0.2s;
         }
         .tab.active {
             background: #111827;
             color: #ffffff;
         }
-        /* Campos de Entrada */
+        /* Campo de Entrada de datos */
         .input-container {
-            margin-bottom: 12px;
+            margin-bottom: 20px;
         }
-        input[type="text"] {
+        input {
             width: 100%;
             padding: 14px 16px;
             border: 1px solid #dee2e6;
@@ -100,44 +90,9 @@
             color: #212529;
             transition: all 0.2s;
         }
-        input[type="text"]:focus {
+        input:focus {
             border-color: #111827;
             background: #ffffff;
-        }
-        /* Entrada de archivos para la carta */
-        .file-box {
-            display: none;
-            background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 12px;
-            cursor: pointer;
-        }
-        .file-box input {
-            display: none;
-        }
-        .file-label {
-            font-size: 14px;
-            color: #495057;
-            font-weight: 500;
-        }
-        /* Botón de Generar Principal */
-        .btn-generate {
-            width: 100%;
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-bottom: 20px;
-        }
-        .btn-generate:hover {
-            background: #0056b3;
         }
         /* Contenedor central gris */
         .preview-box {
@@ -166,7 +121,6 @@
         }
         .qr-info-display div {
             margin-bottom: 4px;
-            word-break: break-all;
         }
         .qr-info-display strong {
             color: #111827;
@@ -198,16 +152,12 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            border: none;
             transition: all 0.2s;
         }
         .btn-dark {
             background: #111827;
             color: #ffffff;
-            border: none;
         }
         .btn-dark:hover {
             background: #1f2937;
@@ -232,20 +182,11 @@
             font-weight: 600;
             color: #111827;
             margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
         .history-status {
             font-size: 13px;
             color: #495057;
             line-height: 1.4;
-        }
-        .history-note {
-            font-size: 12px;
-            color: #868e96;
-            margin-top: 6px;
-            display: block;
         }
     </style>
 </head>
@@ -254,32 +195,22 @@
     <div class="qr-container">
         <div class="header">
             <div class="title-wrapper">
-                <div class="logo-box"></div>
-                <h1>QR Forge</h1>
+                <h1>QR AI-ON</h1>
             </div>
-            <div class="subtitle">Genera cualquier código QR profesional</div>
+            <div class="subtitle">Agencia & Mentoría</div>
         </div>
 
         <div class="tabs-container">
             <button class="tab active" onclick="changeType(this, 'URL', 'Ej: https://tu-sitio-web.com')">🔗 URL</button>
-            <button class="tab" onclick="changeType(this, 'Texto', 'Escribí el texto aquí...')">📝 Texto</button>
+            <button class="tab" onclick="changeType(this, 'WhatsApp', 'Ej: +5493547XXXXXX')">💬 WhatsApp</button>
             <button class="tab" onclick="changeType(this, 'WiFi', 'Ej: WIFI:S:NombreRed;T:WPA;P:Contraseña;;')">📶 WiFi</button>
-            <button class="tab" onclick="changeType(this, 'vCard', 'Ej: NOMBRE:Guillermo;TEL:123456789;;')">👤 vCard</button>
+            <button class="tab" onclick="changeType(this, 'Texto', 'Escribí el texto aquí...')">📝 Texto</button>
             <button class="tab" onclick="changeType(this, 'Email', 'Ej: mailto:contacto@correo.com')">✉️ Email</button>
-            <button class="tab" onclick="changeType(this, 'WhatsApp', 'Ej: 5493547XXXXXX (Con código de país)')">💬 WhatsApp</button>
-            <button class="tab" onclick="changeType(this, 'Carta Menu', '')">📋 Carta Menú</button>
         </div>
 
-        <div class="input-container" id="text-input-container">
+        <div class="input-container">
             <input type="text" id="qr-input" placeholder="Ej: https://tu-sitio-web.com" autocomplete="off">
         </div>
-
-        <div class="file-box" id="file-input-container" onclick="document.getElementById('file-element').click()">
-            <span class="file-label" id="file-status-label">📁 Subir PDF o Imagen de la Carta</span>
-            <input type="file" id="file-element" accept="application/pdf, image/*" onchange="handleFileSelection(this)">
-        </div>
-
-        <button class="btn-generate" onclick="forceGenerateQR()">Generar Código QR</button>
 
         <div class="preview-box">
             
@@ -297,20 +228,14 @@
         </div>
 
         <div class="history-section">
-            <div class="history-title">📜 Historial de QR</div>
-            <div class="history-status" id="history-content">No hay QR guardados aún.</div>
-            <span class="history-note">Los QR se guardan en tu dispositivo • Sin conexión después de primer uso</span>
+            <div class="history-title">📜 Historial</div>
+            <div class="history-status" id="history-content">No hay códigos guardados aún.</div>
         </div>
     </div>
 
     <script>
         const qrcodeElement = document.getElementById("qrcode");
         const qrInput = document.getElementById("qr-input");
-        const textContainer = document.getElementById("text-input-container");
-        const fileContainer = document.getElementById("file-input-container");
-        const fileElement = document.getElementById("file-element");
-        const fileStatusLabel = document.getElementById("file-status-label");
-        
         const infoDisplay = document.getElementById("info-display");
         const infoType = document.getElementById("info-type");
         const infoData = document.getElementById("info-data");
@@ -319,73 +244,39 @@
         let currentRawData = "";
         let qrcodeInstance = null;
 
+        // Función para cambiar de categoría
         function changeType(element, type, placeholderText) {
             document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
             currentCategory = type;
-            
             qrInput.value = "";
-            fileElement.value = "";
-            currentRawData = "";
-            fileStatusLabel.innerText = "📁 Subir PDF o Imagen de la Carta";
+            qrInput.placeholder = placeholderText;
+            
+            // Ocultar info y limpiar QR al cambiar de tipo
             qrcodeElement.innerHTML = "";
             infoDisplay.style.display = "none";
             qrcodeInstance = null;
-
-            if (type === "Carta Menu") {
-                textContainer.style.display = "none";
-                fileContainer.style.display = "block";
-            } else {
-                textContainer.style.display = "block";
-                fileContainer.style.display = "none";
-                qrInput.placeholder = placeholderText;
-            }
         }
 
-        function handleFileSelection(input) {
-            if (input.files && input.files[0]) {
-                fileStatusLabel.innerText = `✓ Archivo cargado: ${input.files[0].name}`;
-            }
-        }
-
-        function forceGenerateQR() {
-            qrcodeElement.innerHTML = "";
-            infoDisplay.style.display = "none";
-
-            if (currentCategory === "Carta Menu") {
-                if (!fileElement.files || !fileElement.files[0]) {
-                    alert("Por favor, selecciona primero un archivo de tu carta (PDF o Imagen).");
-                    return;
-                }
-                const tempFileName = encodeURIComponent(fileElement.files[0].name);
-                currentRawData = `https://tu-servidor-menu.com/storage/files/${Date.now()}-${tempFileName}`;
-                renderQR(currentRawData);
-            } else {
-                let currentText = qrInput.value.trim();
-                if (currentText === "") {
-                    alert("Por favor, ingresá datos primero en el campo de texto.");
-                    return;
-                }
-
-                // Inyección del protocolo oficial wa.me para abrir el chat directo
-                if (currentCategory === "WhatsApp") {
-                    let cleanNumber = currentText.replace(/\D/g, "");
-                    currentRawData = `https://wa.me/${cleanNumber}`;
-                } else {
-                    currentRawData = currentText;
-                }
-
-                renderQR(currentRawData);
-            }
-        }
-
+        // Función principal para renderizar el QR y la información
         function renderQR(textToEncode) {
+            // Limpiar contenedor y QR previo si existe
+            qrcodeElement.innerHTML = "";
+            
+            // Corrección de WhatsApp: inyectar wa.me si es necesario
+            let finalText = textToEncode;
+            if (currentCategory === "WhatsApp") {
+                finalText = `https://wa.me/${textToEncode.replace(/\+/g, '').replace(/\s+/g, '')}`;
+            }
+
+            // Actualizar cuadro de información descriptiva
             infoType.innerText = currentCategory;
-            infoData.innerText = textToEncode;
+            infoData.innerText = finalText; // Muestra el enlace wa.me final
             infoDisplay.style.display = "block";
 
+            // Crear el código QR físico
             qrcodeInstance = new QRCode(qrcodeElement, {
-                text: textToEncode,
+                text: finalText,
                 width: 160,
                 height: 160,
                 colorDark : "#111827",
@@ -394,66 +285,79 @@
             });
         }
 
+        // Detectar cambios en tiempo real en el input
+        qrInput.addEventListener("input", (e) => {
+            currentRawData = e.target.value;
+            if (currentRawData.trim() !== "") {
+                renderQR(currentRawData);
+            } else {
+                qrcodeElement.innerHTML = "";
+                infoDisplay.style.display = "none";
+                qrcodeInstance = null;
+            }
+        });
+
+        // Descarga avanzada: crea un Canvas de tarjeta descriptiva
         function downloadPNG() {
             const img = document.querySelector("#qrcode img");
             if (!img) {
-                alert("Por favor, primero generá el código QR usando el botón azul.");
+                alert("Por favor, primero ingresá datos para generar el código QR.");
                 return;
             }
 
+            // Crear un Canvas temporal para armar la tarjeta
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
 
+            // Configurar tamaño de la tarjeta (Ancho x Alto)
             canvas.width = 400;
             canvas.height = 450;
 
+            // Fondo blanco de la tarjeta
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Borde decorativo suave
             ctx.strokeStyle = "#e9ecef";
             ctx.lineWidth = 4;
             ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
 
+            // Título de Servicio (Arriba)
             ctx.fillStyle = "#111827";
             ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, Arial";
             ctx.textAlign = "center";
             ctx.fillText(`SERVICIO: QR ${currentCategory.toUpperCase()}`, canvas.width / 2, 50);
 
+            // Dibujar el código QR en el centro
             ctx.drawImage(img, 100, 90, 200, 200);
 
+            // Sección de Datos Codificados (Abajo del QR)
             ctx.fillStyle = "#6b7280";
             ctx.font = "13px -apple-system, BlinkMacSystemFont, Arial";
             ctx.fillText("Contenido Codificado:", canvas.width / 2, 330);
 
             ctx.fillStyle = "#111827";
             ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, Arial";
-            
-            let displayUrl = currentRawData;
-            if (displayUrl.length > 42) {
-                displayUrl = displayUrl.substring(0, 39) + "...";
-            }
-            ctx.fillText(displayUrl, canvas.width / 2, 360);
+            ctx.fillText(infoData.innerText, canvas.width / 2, 360);
 
-            // Marca Corporativa del Usuario Final Actualizada
-            ctx.fillStyle = "#007bff";
-            ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, Arial";
-            ctx.fillText("AI-ON Agencia & Mentoría", canvas.width / 2, 412);
+            // Pie de Marca Corporativa (Cambio solicitado)
+            ctx.fillStyle = "#9ca3af";
+            ctx.font = "italic 11px -apple-system, BlinkMacSystemFont, Arial";
+            ctx.fillText("Generado con QR AI-ON Agencia & Mentoría", canvas.width / 2, 410);
 
+            // Disparar la descarga de la tarjeta completa
             const downloadLink = document.createElement("a");
             downloadLink.href = canvas.toDataURL("image/png");
-            downloadLink.download = `tarjeta-qr-${currentCategory.toLowerCase().replace(" ", "-")}.png`;
+            downloadLink.download = `tarjeta-qr-${currentCategory.toLowerCase()}.png`;
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
         }
 
         function saveQR() {
-            if (!currentRawData) {
-                alert("No hay información válida para guardar.");
-                return;
-            }
+            if (!currentRawData) return;
             const historyContent = document.getElementById("history-content");
-            historyContent.innerHTML = `✓ Último guardado [${currentCategory}]: <strong>${currentRawData}</strong>`;
+            historyContent.innerHTML = `✓ Último QR guardado: <strong>${infoData.innerText}</strong> [${currentCategory}]`;
         }
     </script>
 </body>
