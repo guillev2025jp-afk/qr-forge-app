@@ -255,11 +255,12 @@
     </div>
 
     <script>
+        // Lógica limpia y corregida
         const qrcodeElement = document.getElementById("qrcode");
         const qrInput = document.getElementById("qr-input");
         let qrcodeInstance = null;
 
-        // Cambiar entre categorías limpiamente
+        // Función corregida para cambiar pestañas sin romper el script
         function changeType(element, placeholderText) {
             document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
@@ -289,7 +290,7 @@
             });
         }
 
-        // Descarga directa de la imagen
+        // Descarga de la imagen generada
         function downloadPNG() {
             const img = document.querySelector("#qrcode img");
             if (!img) {
@@ -304,7 +305,7 @@
             document.body.removeChild(downloadLink);
         }
 
-        // Historial funcional
+        // Historial funcional de la interfaz
         function saveQR() {
             const currentText = qrInput.value.trim();
             if (currentText === "") {
