@@ -33,23 +33,18 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.03);
             text-align: center;
         }
-        /* Encabezado */
+        /* Encabezado Corporativo */
         .header {
             display: flex;
             flex-direction: column;
             align-items: center;
             margin-bottom: 20px;
         }
-        .title-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 6px;
-        }
         h1 {
             font-size: 24px;
             font-weight: 700;
             color: #111827;
+            margin-bottom: 6px;
         }
         .subtitle {
             font-size: 14px;
@@ -100,7 +95,7 @@
             border-color: #111827;
             background: #ffffff;
         }
-        /* Entrada de archivos para la carta de restaurante */
+        /* Entrada interactiva dashed para Carta Menú */
         .file-box {
             display: none;
             background: #f8f9fa;
@@ -123,7 +118,7 @@
             color: #495057;
             font-weight: 500;
         }
-        /* Botón de Generar Principal */
+        /* Botón de Generar Principal Fijo */
         .btn-generate {
             width: 100%;
             background: #007bff;
@@ -140,7 +135,7 @@
         .btn-generate:hover {
             background: #0056b3;
         }
-        /* Contenedor central gris de vista previa */
+        /* Contenedor central de vista previa */
         .preview-box {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -153,7 +148,7 @@
             min-height: 200px;
             justify-content: center;
         }
-        /* Datos informativos del QR en pantalla */
+        /* Datos informativos del QR */
         .qr-info-display {
             width: 100%;
             background: #ffffff;
@@ -169,9 +164,6 @@
             margin-bottom: 4px;
             word-break: break-all;
         }
-        .qr-info-display strong {
-            color: #111827;
-        }
         #qrcode {
             margin-bottom: 20px;
             min-height: 160px;
@@ -179,12 +171,16 @@
             align-items: center;
             justify-content: center;
         }
-        #qrcode img {
+        #qrcode canvas {
             display: block;
             background: #ffffff;
             padding: 12px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        /* Ocultamos el fallback de imagen de la librería para obligar el uso de canvas */
+        #qrcode img {
+            display: none !important;
         }
         /* Botones de acción inferiores */
         .actions {
@@ -204,11 +200,11 @@
             justify-content: center;
             gap: 6px;
             transition: all 0.2s;
+            border: none;
         }
         .btn-dark {
             background: #111827;
             color: #ffffff;
-            border: none;
         }
         .btn-dark:hover {
             background: #1f2937;
@@ -245,9 +241,7 @@
 
     <div class="qr-container">
         <div class="header">
-            <div class="title-wrapper">
-                <h1>QR AI-ON</h1>
-            </div>
+            <h1>QR AI-ON</h1>
             <div class="subtitle">Agencia & Mentoría</div>
         </div>
 
@@ -306,7 +300,6 @@
 
         let currentCategory = "URL";
         let currentRawData = "";
-        let qrcodeInstance = null;
 
         function changeType(element, type, placeholderText) {
             document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
@@ -319,7 +312,6 @@
             fileStatusLabel.innerText = "📁 Subir PDF o Imagen de la Carta";
             qrcodeElement.innerHTML = "";
             infoDisplay.style.display = "none";
-            qrcodeInstance = null;
 
             if (type === "Carta Menu") {
                 textContainer.style.display = "none";
@@ -343,7 +335,7 @@
 
             if (currentCategory === "Carta Menu") {
                 if (!fileElement.files || !fileElement.files[0]) {
-                    alert("Por favor, selecciona primero un archivo de tu carta (PDF o Imagen).");
+                    alert("Por favor, selecciona primero un archivo.");
                     return;
                 }
                 const reader = new FileReader();
@@ -379,76 +371,65 @@
             infoData.innerText = textToEncode.length > 50 ? textToEncode.substring(0, 47) + "..." : textToEncode;
             infoDisplay.style.display = "block";
 
-            qrcodeInstance = new QRCode(qrcodeElement, {
+            // Forzamos el uso de Canvas puro deshabilitando la renderización por tabla
+            new QRCode(qrcodeElement, {
                 text: textToEncode,
                 width: 160,
                 height: 160,
                 colorDark : "#111827",
                 colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.L
+                correctLevel : QRCode.CorrectLevel.L,
+                useSVG: false
             });
         }
 
         function downloadPNG() {
-            if (!currentRawData) {
+            // Buscamos el Canvas real que está dibujado en la pantalla
+            const sourceCanvas = qrcodeElement.querySelector("canvas");
+            if (!sourceCanvas) {
                 alert("Por favor, primero generá el código QR usando el botón azul.");
                 return;
             }
 
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            canvas.width = 400;
-            canvas.height = 450;
+            const targetCanvas = document.createElement("canvas");
+            const ctx = targetCanvas.getContext("2d");
+            targetCanvas.width = 400;
+            targetCanvas.height = 450;
 
             ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
 
             ctx.strokeStyle = "#e9ecef";
             ctx.lineWidth = 4;
-            ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+            ctx.strokeRect(10, 10, targetCanvas.width - 20, targetCanvas.height - 20);
 
             ctx.fillStyle = "#111827";
             ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, Arial";
             ctx.textAlign = "center";
-            ctx.fillText(`SERVICIO: QR ${currentCategory.toUpperCase()}`, canvas.width / 2, 50);
+            ctx.fillText(`SERVICIO: QR ${currentCategory.toUpperCase()}`, targetCanvas.width / 2, 50);
 
-            // SOLUCIÓN DEFINITIVA PARA CELULARES: Fabricamos el QR directamente en un Canvas oculto
-            const tempDiv = document.createElement("div");
-            new QRCode(tempDiv, {
-                text: currentRawData,
-                width: 200,
-                height: 200,
-                colorDark: "#111827",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.L
-            });
+            // Clonación instantánea por píxeles: dibuja el Canvas de pantalla en el de descarga
+            ctx.drawImage(sourceCanvas, 120, 90, 160, 160);
 
-            // Retardo mínimo para asegurar la inyección limpia del QR en la tarjeta
-            setTimeout(() => {
-                const qrImg = tempDiv.querySelector("img");
-                if (qrImg) {
-                    ctx.drawImage(qrImg, 100, 90, 200, 200);
-                }
+            ctx.fillStyle = "#6b7280";
+            ctx.font = "13px -apple-system, BlinkMacSystemFont, Arial";
+            ctx.fillText("Contenido Codificado:", targetCanvas.width / 2, 330);
 
-                ctx.fillStyle = "#6b7280";
-                ctx.font = "13px -apple-system, BlinkMacSystemFont, Arial";
-                ctx.fillText("Contenido Codificado:", canvas.width / 2, 330);
+            ctx.fillStyle = "#111827";
+            ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, Arial";
+            ctx.fillText(infoData.innerText, targetCanvas.width / 2, 360);
 
-                ctx.fillStyle = "#111827";
-                ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, Arial";
-                ctx.fillText(infoData.innerText, canvas.width / 2, 360);
+            // Sello de Marca Comercial AI-ON Garantizado
+            ctx.fillStyle = "#007bff";
+            ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, Arial";
+            ctx.fillText("Generado con QR AI-ON Agencia & Mentoría", targetCanvas.width / 2, 412);
 
-                ctx.fillStyle = "#007bff";
-                ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, Arial";
-                ctx.fillText("Generado con QR AI-ON Agencia & Mentoría", canvas.width / 2, 412);
-
-                const downloadLink = document.createElement("a");
-                downloadLink.href = canvas.toDataURL("image/png");
-                downloadLink.download = `tarjeta-qr-${currentCategory.toLowerCase().replace(" ", "-")}.png`;
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
-            }, 100);
+            const downloadLink = document.createElement("a");
+            downloadLink.href = targetCanvas.toDataURL("image/png");
+            downloadLink.download = `tarjeta-qr-${currentCategory.toLowerCase().replace(" ", "-")}.png`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
         }
 
         function saveQR() {
