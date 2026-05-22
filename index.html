@@ -371,7 +371,6 @@
             infoData.innerText = textToEncode.length > 50 ? textToEncode.substring(0, 47) + "..." : textToEncode;
             infoDisplay.style.display = "block";
 
-            // Forzamos el uso de Canvas puro deshabilitando la renderización por tabla
             new QRCode(qrcodeElement, {
                 text: textToEncode,
                 width: 160,
@@ -384,7 +383,6 @@
         }
 
         function downloadPNG() {
-            // Buscamos el Canvas real que está dibujado en la pantalla
             const sourceCanvas = qrcodeElement.querySelector("canvas");
             if (!sourceCanvas) {
                 alert("Por favor, primero generá el código QR usando el botón azul.");
@@ -396,6 +394,7 @@
             targetCanvas.width = 400;
             targetCanvas.height = 450;
 
+            // FUERZA FONDO BLANCO SÓLIDO SIN TRANSPARENCIAS
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
 
@@ -408,7 +407,7 @@
             ctx.textAlign = "center";
             ctx.fillText(`SERVICIO: QR ${currentCategory.toUpperCase()}`, targetCanvas.width / 2, 50);
 
-            // Clonación instantánea por píxeles: dibuja el Canvas de pantalla en el de descarga
+            // CLONACIÓN DIRECTA POR PÍXELES NATIVOS
             ctx.drawImage(sourceCanvas, 120, 90, 160, 160);
 
             ctx.fillStyle = "#6b7280";
@@ -419,7 +418,6 @@
             ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, Arial";
             ctx.fillText(infoData.innerText, targetCanvas.width / 2, 360);
 
-            // Sello de Marca Comercial AI-ON Garantizado
             ctx.fillStyle = "#007bff";
             ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, Arial";
             ctx.fillText("Generado con QR AI-ON Agencia & Mentoría", targetCanvas.width / 2, 412);
