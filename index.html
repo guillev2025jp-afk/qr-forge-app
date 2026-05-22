@@ -37,12 +37,6 @@
             align-items: center;
             margin-bottom: 20px;
         }
-        .title-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 6px;
-        }
         h1 {
             font-size: 24px;
             font-weight: 700;
@@ -97,15 +91,20 @@
             border-color: #111827;
             background: #ffffff;
         }
-        /* Entrada de archivos para la carta */
+        /* Recuadro de carga de archivos (Carta Menú) */
         .file-box {
             display: none;
             background: #f8f9fa;
             border: 2px dashed #dee2e6;
             border-radius: 14px;
-            padding: 16px;
+            padding: 20px;
             margin-bottom: 12px;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-box:hover {
+            background: #f1f3f5;
+            border-color: #007bff;
         }
         .file-box input {
             display: none;
@@ -115,7 +114,7 @@
             color: #495057;
             font-weight: 500;
         }
-        /* Botón de Generar Principal Restaurado */
+        /* Botón de Generar Principal */
         .btn-generate {
             width: 100%;
             background: #007bff;
@@ -132,7 +131,7 @@
         .btn-generate:hover {
             background: #0056b3;
         }
-        /* Contenedor central gris */
+        /* Contenedor central de vista previa */
         .preview-box {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -237,16 +236,14 @@
 
     <div class="qr-container">
         <div class="header">
-            <div class="title-wrapper">
-                <h1>QR AI-ON</h1>
-            </div>
+            <h1>QR AI-ON</h1>
             <div class="subtitle">Agencia & Mentoría</div>
         </div>
 
         <div class="tabs-container">
             <button class="tab active" onclick="changeType(this, 'URL', 'Ej: https://tu-sitio-web.com')">🔗 URL</button>
-            <button class="tab" onclick="changeType(this, 'WhatsApp', 'Ej: +5493547XXXXXX')">💬 WhatsApp</button>
-            <button class="tab" onclick="changeType(this, 'WiFi', 'Ej: WIFI:S:NombreRed;T:WPA;P:Contraseña;;')">📶 WiFi</button>
+            <button class="tab" onclick="changeType(this, 'WhatsApp', 'Ej: 5493547XXXXXX')">💬 WhatsApp</button>
+            <button class="tab" onclick="changeType(this, 'WiFi', 'Ej: NombreRed')">📶 WiFi</button>
             <button class="tab" onclick="changeType(this, 'Texto', 'Escribí el texto aquí...')">📝 Texto</button>
             <button class="tab" onclick="changeType(this, 'Email', 'Ej: mailto:contacto@correo.com')">✉️ Email</button>
             <button class="tab" onclick="changeType(this, 'Carta Menu', '')">📋 Carta Menú</button>
@@ -338,9 +335,15 @@
                     alert("Por favor, selecciona primero un archivo de tu carta (PDF o Imagen).");
                     return;
                 }
-                const tempFileName = encodeURIComponent(fileElement.files[0].name);
-                currentRawData = `https://tu-servidor-menu.com/storage/files/${Date.now()}-${tempFileName}`;
-                renderQR(currentRawData);
+                
+                // Conversión real a URL de datos local para que el QR funcione al escanearse de verdad
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentRawData = e.target.result;
+                    renderQR(currentRawData);
+                };
+                reader.readAsDataURL(fileElement.files[0]);
+                
             } else {
                 let currentText = qrInput.value.trim();
                 if (currentText === "") {
@@ -348,10 +351,20 @@
                     return;
                 }
 
-                // Inyección estricta del protocolo wa.me para corregir redirección
+                // Normalización inteligente del número de WhatsApp para evitar fallas locales
                 if (currentCategory === "WhatsApp") {
-                    let cleanNumber = currentText.replace(/\D/g, "");
-                    currentRawData = `https://wa.me/${cleanNumber}`;
+                    let digits = currentText.replace(/\D/g, "");
+                    // Si el usuario escribe el número sin el código de país (ej: empieza con 3547 o 03547)
+                    if (digits.startsWith("0")) {
+                        digits = digits.substring(1);
+                    }
+                    if (!digits.startsWith("54")) {
+                        // Agrega el prefijo de Argentina de forma automática si no está presente
+                        digits = "54" + digits;
+                    }
+                    currentRawData = `https://wa.me/${digits}`;
+                } else if (currentCategory === "WiFi") {
+                    currentRawData = `WIFI:S:${currentText};T:WPA;P:;;`;
                 } else {
                     currentRawData = currentText;
                 }
@@ -362,7 +375,8 @@
 
         function renderQR(textToEncode) {
             infoType.innerText = currentCategory;
-            infoData.innerText = textToEncode;
+            // Mostrar una versión prolija y corta en pantalla si es un Base64 muy largo
+            infoData.innerText = textToEncode.length > 60 ? textToEncode.substring(0, 57) + "..." : textToEncode;
             infoDisplay.style.display = "block";
 
             qrcodeInstance = new QRCode(qrcodeElement, {
@@ -371,7 +385,7 @@
                 height: 160,
                 colorDark : "#111827",
                 colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
+                correctLevel : QRCode.CorrectLevel.L // Nivel óptimo para soportar datos densos de archivos
             });
         }
 
@@ -409,13 +423,10 @@
             ctx.fillStyle = "#111827";
             ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, Arial";
             
-            let displayUrl = currentRawData;
-            if (displayUrl.length > 42) {
-                displayUrl = displayUrl.substring(0, 39) + "...";
-            }
+            let displayUrl = infoData.innerText;
             ctx.fillText(displayUrl, canvas.width / 2, 360);
 
-            // Pie de Marca Corporativa Modificada Exitosamente
+            // Marca comercial corregida
             ctx.fillStyle = "#007bff";
             ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, Arial";
             ctx.fillText("Generado con QR AI-ON Agencia & Mentoría", canvas.width / 2, 412);
@@ -431,9 +442,8 @@
         function saveQR() {
             if (!currentRawData) return;
             const historyContent = document.getElementById("history-content");
-            historyContent.innerHTML = `✓ Último guardado [${currentCategory}]: <strong>${currentRawData}</strong>`;
+            historyContent.innerHTML = `✓ Último guardado [${currentCategory}]: <strong>${infoData.innerText}</strong>`;
         }
     </script>
 </body>
 </html>
-
