@@ -37,6 +37,12 @@
             align-items: center;
             margin-bottom: 20px;
         }
+        .title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
         h1 {
             font-size: 24px;
             font-weight: 700;
@@ -91,13 +97,13 @@
             border-color: #111827;
             background: #ffffff;
         }
-        /* Recuadro de carga de archivos (Carta Menú) */
+        /* Entrada de archivos para la carta de restaurante */
         .file-box {
             display: none;
             background: #f8f9fa;
             border: 2px dashed #dee2e6;
             border-radius: 14px;
-            padding: 20px;
+            padding: 18px;
             margin-bottom: 12px;
             cursor: pointer;
             transition: all 0.2s;
@@ -131,7 +137,7 @@
         .btn-generate:hover {
             background: #0056b3;
         }
-        /* Contenedor central de vista previa */
+        /* Contenedor central gris de vista previa */
         .preview-box {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -236,7 +242,9 @@
 
     <div class="qr-container">
         <div class="header">
-            <h1>QR AI-ON</h1>
+            <div class="title-wrapper">
+                <h1>QR AI-ON</h1>
+            </div>
             <div class="subtitle">Agencia & Mentoría</div>
         </div>
 
@@ -335,15 +343,12 @@
                     alert("Por favor, selecciona primero un archivo de tu carta (PDF o Imagen).");
                     return;
                 }
-                
-                // Conversión real a URL de datos local para que el QR funcione al escanearse de verdad
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     currentRawData = e.target.result;
                     renderQR(currentRawData);
                 };
                 reader.readAsDataURL(fileElement.files[0]);
-                
             } else {
                 let currentText = qrInput.value.trim();
                 if (currentText === "") {
@@ -351,17 +356,11 @@
                     return;
                 }
 
-                // Normalización inteligente del número de WhatsApp para evitar fallas locales
+                // Filtrado de número y prefijo limpio para WhatsApp directo
                 if (currentCategory === "WhatsApp") {
                     let digits = currentText.replace(/\D/g, "");
-                    // Si el usuario escribe el número sin el código de país (ej: empieza con 3547 o 03547)
-                    if (digits.startsWith("0")) {
-                        digits = digits.substring(1);
-                    }
-                    if (!digits.startsWith("54")) {
-                        // Agrega el prefijo de Argentina de forma automática si no está presente
-                        digits = "54" + digits;
-                    }
+                    if (digits.startsWith("0")) digits = digits.substring(1);
+                    if (!digits.startsWith("54")) digits = "54" + digits;
                     currentRawData = `https://wa.me/${digits}`;
                 } else if (currentCategory === "WiFi") {
                     currentRawData = `WIFI:S:${currentText};T:WPA;P:;;`;
@@ -375,8 +374,7 @@
 
         function renderQR(textToEncode) {
             infoType.innerText = currentCategory;
-            // Mostrar una versión prolija y corta en pantalla si es un Base64 muy largo
-            infoData.innerText = textToEncode.length > 60 ? textToEncode.substring(0, 57) + "..." : textToEncode;
+            infoData.innerText = textToEncode.length > 50 ? textToEncode.substring(0, 47) + "..." : textToEncode;
             infoDisplay.style.display = "block";
 
             qrcodeInstance = new QRCode(qrcodeElement, {
@@ -385,7 +383,7 @@
                 height: 160,
                 colorDark : "#111827",
                 colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.L // Nivel óptimo para soportar datos densos de archivos
+                correctLevel : QRCode.CorrectLevel.L
             });
         }
 
@@ -422,11 +420,9 @@
 
             ctx.fillStyle = "#111827";
             ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, Arial";
-            
-            let displayUrl = infoData.innerText;
-            ctx.fillText(displayUrl, canvas.width / 2, 360);
+            ctx.fillText(infoData.innerText, canvas.width / 2, 360);
 
-            // Marca comercial corregida
+            // Pie de marca solicitado impreso directo en la descarga
             ctx.fillStyle = "#007bff";
             ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, Arial";
             ctx.fillText("Generado con QR AI-ON Agencia & Mentoría", canvas.width / 2, 412);
