@@ -441,5 +441,14 @@
             historyContent.innerHTML = `✓ Último guardado [${currentCategory}]: <strong>${infoData.innerText}</strong>`;
         }
     </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('App lista para instalar', reg))
+                    .catch(err => console.log('Error al preparar app', err));
+            });
+        }
+    </script>
 </body>
 </html>
