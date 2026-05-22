@@ -104,7 +104,7 @@
             border-color: #111827;
             background: #ffffff;
         }
-        /* Entrada de archivos oculta por defecto */
+        /* Entrada de archivos para la carta */
         .file-box {
             display: none;
             background: #f8f9fa;
@@ -152,7 +152,7 @@
             min-height: 200px;
             justify-content: center;
         }
-        /* Datos informativos del QR */
+        /* Datos informativos del QR en pantalla */
         .qr-info-display {
             width: 100%;
             background: #ffffff;
@@ -162,7 +162,7 @@
             margin-bottom: 16px;
             font-size: 13px;
             text-align: left;
-            display: none; /* Se activa con JS */
+            display: none;
         }
         .qr-info-display div {
             margin-bottom: 4px;
@@ -316,7 +316,7 @@
         const infoData = document.getElementById("info-data");
 
         let currentCategory = "URL";
-        let uploadedFileUrl = "";
+        let currentRawData = "";
         let qrcodeInstance = null;
 
         // Cambiar entre categorías
@@ -325,16 +325,14 @@
             element.classList.add('active');
             currentCategory = type;
             
-            // Resetear estados e interfaz de información
             qrInput.value = "";
             fileElement.value = "";
-            uploadedFileUrl = "";
+            currentRawData = "";
             fileStatusLabel.innerText = "📁 Subir PDF o Imagen de la Carta";
             qrcodeElement.innerHTML = "";
             infoDisplay.style.display = "none";
             qrcodeInstance = null;
 
-            // Mostrar el input correcto según la categoría elegida
             if (type === "Carta Menu") {
                 textContainer.style.display = "none";
                 fileContainer.style.display = "block";
@@ -345,14 +343,12 @@
             }
         }
 
-        // Controlar la selección visual del archivo
         function handleFileSelection(input) {
             if (input.files && input.files[0]) {
                 fileStatusLabel.innerText = `✓ Archivo cargado: ${input.files[0].name}`;
             }
         }
 
-        // Simulación profesional de procesamiento y subida de archivos en la nube
         function forceGenerateQR() {
             qrcodeElement.innerHTML = "";
             infoDisplay.style.display = "none";
@@ -362,30 +358,25 @@
                     alert("Por favor, selecciona primero un archivo de tu carta (PDF o Imagen).");
                     return;
                 }
-                
-                // Generamos un enlace de almacenamiento temporal simulado para el archivo
                 const tempFileName = encodeURIComponent(fileElement.files[0].name);
-                uploadedFileUrl = `https://tu-servidor-menu.com/storage/files/${Date.now()}-${tempFileName}`;
-                
-                renderQR(uploadedFileUrl);
+                currentRawData = `https://tu-servidor-menu.com/storage/files/${Date.now()}-${tempFileName}`;
+                renderQR(currentRawData);
             } else {
                 const currentText = qrInput.value.trim();
                 if (currentText === "") {
                     alert("Por favor, ingresá datos primero en el campo de texto.");
                     return;
                 }
-                renderQR(currentText);
+                currentRawData = currentText;
+                renderQR(currentRawData);
             }
         }
 
-        // Renderizado físico y visualización de la información arriba del QR
         function renderQR(textToEncode) {
-            // Activar el cuadro informativo con los datos reales
             infoType.innerText = currentCategory;
             infoData.innerText = textToEncode;
             infoDisplay.style.display = "block";
 
-            // Crear el código QR
             qrcodeInstance = new QRCode(qrcodeElement, {
                 text: textToEncode,
                 width: 160,
@@ -396,30 +387,76 @@
             });
         }
 
-        // Descarga de la imagen generada
+        // Descarga avanzada con Canvas de tarjeta descriptiva completa
         function downloadPNG() {
             const img = document.querySelector("#qrcode img");
             if (!img) {
                 alert("Por favor, primero generá el código QR usando el botón azul.");
                 return;
             }
+
+            // Crear un elemento lienzo temporal
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+
+            // Dimensiones de la tarjeta descargable (Ancho x Alto)
+            canvas.width = 400;
+            canvas.height = 450;
+
+            // 1. Pintar fondo blanco de la tarjeta
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Dibujar borde decorativo suave alrededor
+            ctx.strokeStyle = "#e9ecef";
+            ctx.lineWidth = 4;
+            ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+
+            // 3. Escribir Encabezado / Título del Servicio
+            ctx.fillStyle = "#111827";
+            ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(`SERVICIO: QR ${currentCategory.toUpperCase()}`, canvas.width / 2, 50);
+
+            // 4. Estampar la imagen física del QR generado en el centro del lienzo
+            ctx.drawImage(img, 100, 90, 200, 200);
+
+            // 5. Escribir el Enlace / Nombre debajo del QR descriptivo
+            ctx.fillStyle = "#6b7280";
+            ctx.font = "13px -apple-system, BlinkMacSystemFont, Arial";
+            ctx.fillText("Contenido Codificado:", canvas.width / 2, 330);
+
+            ctx.fillStyle = "#111827";
+            ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, Arial";
+            
+            // Función técnica para acortar texto si el enlace es excesivamente largo
+            let displayUrl = currentRawData;
+            if (displayUrl.length > 42) {
+                displayUrl = displayUrl.substring(0, 39) + "...";
+            }
+            ctx.fillText(displayUrl, canvas.width / 2, 360);
+
+            // 6. Pie de marca profesional
+            ctx.fillStyle = "#9ca3af";
+            ctx.font = "italic 11px -apple-system, BlinkMacSystemFont, Arial";
+            ctx.fillText("Generado con QR Forge App", canvas.width / 2, 410);
+
+            // Disparar la descarga oficial de la tarjeta armada en el dispositivo
             const downloadLink = document.createElement("a");
-            downloadLink.href = img.src;
-            downloadLink.download = `qr-${currentCategory.toLowerCase().replace(" ", "-")}.png`;
+            downloadLink.href = canvas.toDataURL("image/png");
+            downloadLink.download = `tarjeta-qr-${currentCategory.toLowerCase().replace(" ", "-")}.png`;
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
         }
 
-        // Historial funcional
         function saveQR() {
-            const dataText = (currentCategory === "Carta Menu") ? uploadedFileUrl : qrInput.value.trim();
-            if (!dataText) {
+            if (!currentRawData) {
                 alert("No hay información válida para guardar.");
                 return;
             }
             const historyContent = document.getElementById("history-content");
-            historyContent.innerHTML = `✓ Último guardado [${currentCategory}]: <strong>${dataText}</strong>`;
+            historyContent.innerHTML = `✓ Último guardado [${currentCategory}]: <strong>${currentRawData}</strong>`;
         }
     </script>
 </body>
